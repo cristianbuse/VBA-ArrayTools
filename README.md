@@ -21,6 +21,9 @@ TestLibArrayTools.RunAllTests
 ```
 
 ## Usage
+Here are a couple of demo method calls. Find more in the available Demo.bas module
+
+Array-Array conversions, Array-Collection conversions (and viceversa). Note that methods like 'NDArrayTo1DArray' support arrays up to 60 dimensions.
 ```vba
 Public Sub DemoConversions()
     Dim coll As Collection
@@ -94,7 +97,9 @@ Public Sub DemoConversions()
     '   [1,3]
     '   [2,4]
 End Sub
-
+```
+Array and Collection advanced Filtering
+```vba
 Public Sub DemoFiltering()
     Dim arr() As Variant
     Dim coll As Collection
@@ -136,7 +141,9 @@ Public Sub DemoFiltering()
     'Result:
     '   ["B","E"]
 End Sub
-
+```
+Information functions related to Arrays/Collections
+```vba
 Public Sub DemoGetInformation()
     Dim coll As New Collection
     Dim boolExpression As Boolean
