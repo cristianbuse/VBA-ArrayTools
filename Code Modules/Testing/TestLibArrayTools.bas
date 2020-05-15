@@ -1584,6 +1584,12 @@ Private Function TestFilterCollection() As TEST_RESULT
                  , vActual:=CollectionToCSV(LibArrayTools.FilterCollection(coll, filters)) _
                  , detailsIfFalse:="Collection doesn't have the expected elements"
     '
+    Set coll = LibArrayTools.Collection("A", "B", "C", "D", "E")
+    filters = LibArrayTools.CreateFiltersArray("LIKE", "[B-E]", "NOT LIKE", "[C-D]")
+    AssertAreEqual vExpected:="[""B"",""E""]" _
+                 , vActual:=CollectionToCSV(LibArrayTools.FilterCollection(coll, filters)) _
+                 , detailsIfFalse:="Collection doesn't have the expected elements"
+    '
     testResult.passed = True
 ExitTest:
     TestFilterCollection = testResult

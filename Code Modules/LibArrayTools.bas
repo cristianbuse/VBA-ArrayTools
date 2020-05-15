@@ -647,12 +647,13 @@ Public Function FilterCollection(ByRef coll As Collection _
     Dim filter As FILTER_PAIR
     Dim v As Variant
     Dim i As Long
-    Dim j As Long: j = 1
+    Dim j As Long
     '
     'Remove values that do NOT pass filters
     On Error GoTo ErrorHandler
     For i = LBound(filters, 1) To UBound(filters, 1)
         filter = filters(i)
+        j = 1
         For Each v In coll
             If IsValuePassingFilter(v, filter) Then
                 j = j + 1
