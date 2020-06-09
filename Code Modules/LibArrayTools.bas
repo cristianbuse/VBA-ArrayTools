@@ -202,6 +202,37 @@ End Enum
     Const vbLongLong As Long = 20
 #End If
 
+'Structs needed for ZeroLengthArray method
+Private Type SAFEARRAYBOUND
+    cElements As Long
+    lLbound As Long
+End Type
+Private Type TagVariant
+    vt As Integer
+    wReserved1 As Integer
+    wReserved2 As Integer
+    wReserved3 As Integer
+    #If VBA7 Then
+        ptr As LongPtr
+    #Else
+        ptr As Long
+    #End If
+End Type
+
+'Win APIs needed for ZeroLengthArray method
+#If Mac Then
+#Else
+    #If VBA7 Then
+        Private Declare PtrSafe Function SafeArrayCreate Lib "OleAut32.dll" (ByVal vt As Integer, ByVal cDims As Long, ByRef rgsabound As SAFEARRAYBOUND) As LongPtr
+        Private Declare PtrSafe Function VariantCopy Lib "OleAut32.dll" (pvargDest As Any, pvargSrc As Any) As Long
+        Private Declare PtrSafe Function SafeArrayDestroy Lib "OleAut32.dll" (ByVal psa As LongPtr) As Long
+    #Else
+        Private Declare Function SafeArrayCreate Lib "OleAut32.dll" (ByVal vt As Integer, ByVal cDims As Long, ByRef rgsabound As SAFEARRAYBOUND) As Long
+        Private Declare Function VariantCopy Lib "OleAut32.dll" (pvargDest As Variant, pvargSrc As Any) As Long
+        Private Declare Function SafeArrayDestroy Lib "OleAut32.dll" (ByVal psa As Long) As Long
+    #End If
+#End If
+
 '*******************************************************************************
 'Returns a new collection containing the specified values
 'Similar with VBA.[_HiddenModule].Array but returns a collection
@@ -252,7 +283,7 @@ Public Function CollectionTo1DArray(coll As Collection) As Variant()
     If coll Is Nothing Then
         Err.Raise 91, fullMethodName, "Collection not set"
     ElseIf coll.Count = 0 Then
-        CollectionTo1DArray = VBA.Array()
+        CollectionTo1DArray = ZeroLengthArray()
         Exit Function
     End If
     '
@@ -298,7 +329,7 @@ Public Function CollectionTo2DArray(coll As Collection, columnsCount As Long _
     ElseIf columnsCount < 1 Then
         Err.Raise 5, fullMethodName, "Invalid Columns Count"
     ElseIf coll.Count = 0 Then
-        CollectionTo2DArray = VBA.Array()
+        CollectionTo2DArray = ZeroLengthArray()
         Exit Function
     End If
     '
@@ -519,7 +550,7 @@ Public Function Filter1DArray(arr, filters() As FILTER_PAIR) As Variant()
             End If
         Next v
         If collIndexes.Count = 0 Then
-            Filter1DArray = VBA.Array()
+            Filter1DArray = ZeroLengthArray()
             Exit Function
         End If
     Next i
@@ -589,7 +620,7 @@ Public Function Filter2DArray(arr, column_ As Long, filters() As FILTER_PAIR _
             End If
         Next v
         If collRows.Count = 0 Then
-            Filter2DArray = VBA.Array()
+            Filter2DArray = ZeroLengthArray()
             Exit Function
         End If
     Next i
@@ -2677,7 +2708,7 @@ Public Function TransposeArray(arr As Variant) As Variant()
     Select Case GetArrayDimsCount(arr)
     Case 1
         If LBound(arr, 1) > UBound(arr, 1) Then 'Zero-length 1D array
-            TransposeArray = Array()
+            TransposeArray = ZeroLengthArray()
             Exit Function
         End If
         Dim lowBound As Long: lowBound = LBound(arr, 1)
@@ -2833,4 +2864,41 @@ Private Function IsExcelRange(v As Variant) As Boolean
         IsExcelRange = (v.Areas.Count > 0)
         On Error GoTo 0
     End If
+End Function
+
+'*******************************************************************************
+'Returns a Zero-Length array of Variant type
+'*******************************************************************************
+Public Function ZeroLengthArray() As Variant()
+    #If Mac Then
+        ZeroLengthArray = Array()
+    #Else
+        #If Win64 Then
+            ZeroLengthArray = Array() 'Could be done using APIs as below
+        #Else
+            'There's a bug in x32 when using Array(). It cannot be assigned to
+            '   another Variant, cannot be added to Collections/Arrays
+            'Solution is to build an array using Windows APIs
+            '
+            Const vType As Integer = vbVariant 'Could be a parameter of the method
+            Dim bounds(0 To 0) As SAFEARRAYBOUND
+            Dim ptrArray As Long 'No need for LongPtr as we're on the x32 branch
+            Dim tVariant As TagVariant
+            Dim v As Variant
+            '
+            'Create empty array and store pointer
+            ptrArray = SafeArrayCreate(vType, 1, bounds(0))
+            '
+            'Create a Variant pointing to the array
+            tVariant.vt = vbArray + vType
+            tVariant.ptr = ptrArray
+            '
+            'Copy result
+            VariantCopy v, tVariant
+            ZeroLengthArray = v
+            '
+            'Clean-up
+            SafeArrayDestroy ptrArray
+        #End If
+    #End If
 End Function

@@ -313,7 +313,7 @@ Private Function TestGetArrayDimsCount() As TEST_RESULT
     Dim expectedError As EXPECTED_ERROR
     On Error GoTo ErrorHandler
     '
-    AssertAreEqual 1, LibArrayTools.GetArrayDimsCount(Array())
+    AssertAreEqual 1, LibArrayTools.GetArrayDimsCount(ZeroLengthArray())
     '
     Dim arr1(0 To 1, 0 To 2) As Variant
     AssertAreEqual 2, LibArrayTools.GetArrayDimsCount(arr1)
@@ -360,7 +360,7 @@ Private Function TestGetArrayElemCount() As TEST_RESULT
     Dim expectedError As EXPECTED_ERROR
     On Error GoTo ErrorHandler
     '
-    AssertAreEqual 0, LibArrayTools.GetArrayElemCount(Array())
+    AssertAreEqual 0, LibArrayTools.GetArrayElemCount(ZeroLengthArray())
     '
     Dim arr1(0 To 1, 0 To 2) As Variant
     AssertAreEqual 6, LibArrayTools.GetArrayElemCount(arr1)
@@ -542,9 +542,9 @@ Private Function TestCollectionToCSV() As TEST_RESULT
     '
     Set coll = New Collection
     coll.Add New Collection
-    coll.Add Array()
+    coll.Add ZeroLengthArray()
     coll.Add 1
-    coll.Add Array(Array(), Array())
+    coll.Add Array(ZeroLengthArray(), ZeroLengthArray())
     '
     AssertAreEqual vExpected:="[[] [] 1 [[] []]]", vActual:=CollectionToCSV(coll, " ")
     AssertAreEqual vExpected:="[[][]1[[][]]]", vActual:=CollectionToCSV(coll, "")
@@ -583,8 +583,8 @@ Private Function TestArrayToCSV() As TEST_RESULT
     ArrayToCSV arr
     If Not expectedError.wasRaised Then AssertFail "Err not raised. Invalid Array"
     '
-    AssertAreEqual "[]", ArrayToCSV(Array())
-    AssertAreEqual "[[]]", ArrayToCSV(Array(Array()))
+    AssertAreEqual "[]", ArrayToCSV(ZeroLengthArray())
+    AssertAreEqual "[[]]", ArrayToCSV(Array(ZeroLengthArray()))
     AssertAreEqual "[[0],1]", ArrayToCSV(Array(Array(0), 1))
     '
     Dim coll As New Collection
@@ -602,7 +602,7 @@ Private Function TestArrayToCSV() As TEST_RESULT
     ArrayToCSV arr
     If Not expectedError.wasRaised Then AssertFail "Err not raised. Object not supported"
     '
-    arr = Array(Array(), Array(), 1, Array(Array(), Array()))
+    arr = Array(ZeroLengthArray(), ZeroLengthArray(), 1, Array(ZeroLengthArray(), ZeroLengthArray()))
     '
     AssertAreEqual vExpected:="[[] [] 1 [[] []]]", vActual:=ArrayToCSV(arr, " ")
     AssertAreEqual vExpected:="[[][]1[[][]]]", vActual:=ArrayToCSV(arr, "")
@@ -958,7 +958,7 @@ Private Function TestValuesToCollection() As TEST_RESULT
     On Error GoTo ErrorHandler
     '
     Dim c As Collection
-    Set c = LibArrayTools.ValuesToCollection(Array(), nestNone, rowWise)
+    Set c = LibArrayTools.ValuesToCollection(ZeroLengthArray(), nestNone, rowWise)
     AssertAreEqual 0, c.Count, "Collection should have no element"
     '
     Dim coll As New Collection
@@ -980,7 +980,7 @@ Private Function TestValuesToCollection() As TEST_RESULT
     tempColl.Add Array(8.2, 8.5)
     tempColl.Add 9
     tempColl.Add New Collection
-    tempColl.Add Array()
+    tempColl.Add ZeroLengthArray()
     tempColl.Add 10
     tempColl.Add arr
     coll.Add tempColl
@@ -1025,7 +1025,7 @@ Private Function TestValuesToCollection() As TEST_RESULT
                  , vActual:=CollectionToCSV(LibArrayTools.ValuesToCollection(coll, nestAll, columnWise)) _
                  , detailsIfFalse:="Collection doesn't have the expected elements"
     '
-    arr = Array(Array(Array(Array(Null), Array(), arr)))
+    arr = Array(Array(Array(Array(Null), ZeroLengthArray(), arr)))
     '
     AssertAreEqual vExpected:="[Null]" _
                  , vActual:=CollectionToCSV(LibArrayTools.ValuesToCollection(arr, nestMultiItemsOnly, columnWise)) _
@@ -1068,7 +1068,7 @@ Private Function TestIsIterable() As TEST_RESULT
     AssertIsFalse LibArrayTools.IsIterable(arr), "Uninitialized array is not iterable"
     AssertIsFalse LibArrayTools.IsIterable(coll), "Uninstanced collection is not iterable"
     AssertIsFalse LibArrayTools.IsIterable(5), "5 is not iterable"
-    AssertIsTrue LibArrayTools.IsIterable(Array()), "[] is iterable"
+    AssertIsTrue LibArrayTools.IsIterable(ZeroLengthArray()), "[] is iterable"
     AssertIsTrue LibArrayTools.IsIterable(New Collection), "[] is iterable"
     AssertIsTrue LibArrayTools.IsIterable(Array(1, 2, 3)), "[1,2,3] is iterable"
     '
@@ -1114,7 +1114,7 @@ Private Function TestCreateFilter() As TEST_RESULT
     AssertIsTrue IsNull(filter.compValue.value_)
     AssertIsFalse filter.compValue.isIterable_
     '
-    filter = LibArrayTools.CreateFilter("=", Array())
+    filter = LibArrayTools.CreateFilter("=", ZeroLengthArray())
     AssertIsTrue 0 <> filter.cOperator
     AssertIsTrue IsArray(filter.compValue.value_)
     AssertIsTrue filter.compValue.isIterable_
@@ -1157,7 +1157,7 @@ Private Function TestIsValuePassingFilter() As TEST_RESULT
         AssertFail "Err not raised. Operator is invalid"
     End If
     '
-    filter = LibArrayTools.CreateFilter(">", Array())
+    filter = LibArrayTools.CreateFilter(">", ZeroLengthArray())
     '
     expectedError = NewExpectedError(5)
     LibArrayTools.IsValuePassingFilter 2, filter
@@ -1409,7 +1409,7 @@ Private Function TestOneDArrayTo2DArray() As TEST_RESULT
     If Not expectedError.wasRaised Then AssertFail "Err not raised. Not 1D"
     '
     expectedError = NewExpectedError(5)
-    LibArrayTools.OneDArrayTo2DArray Array(), 1
+    LibArrayTools.OneDArrayTo2DArray ZeroLengthArray(), 1
     If Not expectedError.wasRaised Then AssertFail "Err not raised. No elements"
     '
     expectedError = NewExpectedError(5)
@@ -1578,7 +1578,7 @@ Private Function TestFilterCollection() As TEST_RESULT
     Dim coll2 As New Collection
     coll2.Add 5
     '
-    Set coll = LibArrayTools.Collection(Application, Array(), coll2, "test", 2)
+    Set coll = LibArrayTools.Collection(Application, ZeroLengthArray(), coll2, "test", 2)
     filters = LibArrayTools.CreateFiltersArray("NOT IN", Array(Application, "test"))
     AssertAreEqual vExpected:="[[],[5],2]" _
                  , vActual:=CollectionToCSV(LibArrayTools.FilterCollection(coll, filters)) _
@@ -1831,7 +1831,7 @@ Private Function TestGetUniqueValues() As TEST_RESULT
     If Not expectedError.wasRaised Then AssertFail "Err not raised. Not iterable"
     '
     AssertAreEqual vExpected:="[]" _
-                 , vActual:=ArrayToCSV(LibArrayTools.GetUniqueValues(Array())) _
+                 , vActual:=ArrayToCSV(LibArrayTools.GetUniqueValues(ZeroLengthArray())) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
     AssertAreEqual vExpected:="[]" _
@@ -2115,21 +2115,21 @@ Private Function TestMerge1DArrays() As TEST_RESULT
     If Not expectedError.wasRaised Then AssertFail "Err not raised. Not 1D"
     '
     expectedError = NewExpectedError(5)
-    LibArrayTools.Merge1DArrays arr1, Array()
+    LibArrayTools.Merge1DArrays arr1, ZeroLengthArray()
     If Not expectedError.wasRaised Then AssertFail "Err not raised. Not 1D"
     '
     expectedError = NewExpectedError(5)
-    LibArrayTools.Merge1DArrays Array(), arr2
+    LibArrayTools.Merge1DArrays ZeroLengthArray(), arr2
     If Not expectedError.wasRaised Then AssertFail "Err not raised. Not 1D"
     '
-    arr1 = Array()
-    arr2 = Array()
+    arr1 = ZeroLengthArray()
+    arr2 = ZeroLengthArray()
     '
     AssertAreEqual vExpected:="[]" _
                  , vActual:=ArrayToCSV(LibArrayTools.Merge1DArrays(arr1, arr2)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
-    arr1 = Array()
+    arr1 = ZeroLengthArray()
     arr2 = Array(4, 5, 6)
     '
     AssertAreEqual vExpected:="[4,5,6]" _
@@ -2137,7 +2137,7 @@ Private Function TestMerge1DArrays() As TEST_RESULT
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
     arr1 = Array(1, 2, 3)
-    arr2 = Array()
+    arr2 = ZeroLengthArray()
     '
     AssertAreEqual vExpected:="[1,2,3]" _
                  , vActual:=ArrayToCSV(LibArrayTools.Merge1DArrays(arr1, arr2)) _
@@ -2282,7 +2282,7 @@ Private Function TestOneDArrayToCollection() As TEST_RESULT
     LibArrayTools.OneDArrayToCollection Nothing
     If Not expectedError.wasRaised Then AssertFail "Err not raised. Not 1D"
     '
-    arr = Array()
+    arr = ZeroLengthArray()
     AssertAreEqual vExpected:="[]" _
                  , vActual:=CollectionToCSV(LibArrayTools.OneDArrayToCollection(arr))
     '
@@ -2354,7 +2354,7 @@ Private Function TestReplaceEmptyInArray() As TEST_RESULT
                  , vActual:=ArrayToCSV(arr) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
-    arr = Array()
+    arr = ZeroLengthArray()
     '
     ReplaceEmptyInArray arr, 0
     AssertAreEqual vExpected:="[]" _
@@ -2406,7 +2406,7 @@ Private Function TestReverse1DArray() As TEST_RESULT
     If Not expectedError.wasRaised Then AssertFail "Err not raised. Not 1D"
     '
     expectedError = NewExpectedError(5)
-    LibArrayTools.Reverse1DArray Array()
+    LibArrayTools.Reverse1DArray ZeroLengthArray()
     If Not expectedError.wasRaised Then AssertFail "Err not raised. Zero-length"
     '
     expectedError = NewExpectedError(5)
@@ -2748,7 +2748,7 @@ Private Function TestShallowCopyCollection() As TEST_RESULT
                  , vActual:=CollectionToCSV(LibArrayTools.ShallowCopyCollection(Nothing)) _
                  , detailsIfFalse:="Collection doesn't have the expected elements"
     '
-    Set coll = LibArrayTools.Collection(1, 2, 3, New Collection, Empty, Null, Array())
+    Set coll = LibArrayTools.Collection(1, 2, 3, New Collection, Empty, Null, ZeroLengthArray())
     Set coll2 = LibArrayTools.ShallowCopyCollection(coll)
     '
     AssertIsFalse VBA.ObjPtr(coll) = VBA.ObjPtr(coll2)
@@ -3015,7 +3015,7 @@ Private Function TestSort1DArray() As TEST_RESULT
     LibArrayTools.Sort1DArray arr
     If Not expectedError.wasRaised Then AssertFail "Err not raised. Not 1D"
     '
-    arr = Array()
+    arr = ZeroLengthArray()
     AssertAreEqual vExpected:="[]" _
                  , vActual:=ArrayToCSV(LibArrayTools.Sort1DArray(arr)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
@@ -3344,7 +3344,7 @@ Private Function TestSwapValues() As TEST_RESULT
     AssertAreEqual 5, v1
     '
     Set v1 = Application
-    v2 = Array()
+    v2 = ZeroLengthArray()
     LibArrayTools.SwapValues v1, v2
     AssertIsTrue v2 Is Application
     AssertIsTrue IsArray(v1)
@@ -3405,7 +3405,7 @@ Private Function TestTransposeArray() As TEST_RESULT
     LibArrayTools.TransposeArray arr
     If Not expectedError.wasRaised Then AssertFail "Err not raised. Not 1D/2D"
     '
-    arr = Array()
+    arr = ZeroLengthArray()
     AssertAreEqual vExpected:="[]" _
                  , vActual:=ArrayToCSV(LibArrayTools.TransposeArray(arr)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
