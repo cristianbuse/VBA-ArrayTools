@@ -196,10 +196,14 @@ Public Enum NESTING_TYPE
 End Enum
 
 'vbLongLong is a VbVarType available in x64 systems only
-#If Win64 Then
+'Create the value for x32 for convenience in writing Select Case logic
+#If Mac Then
+    Const vbLongLong As Long = 20 'Apparently missing for x64 on Mac
 #Else
-    'Create the value for x32 for convenience in writing Select Case logic
-    Const vbLongLong As Long = 20
+    #If Win64 Then
+    #Else
+        Const vbLongLong As Long = 20
+    #End If
 #End If
 
 'Structs needed for ZeroLengthArray method
