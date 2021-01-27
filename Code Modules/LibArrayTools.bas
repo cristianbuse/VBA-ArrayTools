@@ -2891,25 +2891,43 @@ Public Function ZeroLengthArray() As Variant()
             '   another Variant, cannot be added to Collections/Arrays
             'Solution is to build an array using Windows APIs
             '
-            Const vType As Integer = vbVariant 'Could be a parameter of the method
-            Dim bounds(0 To 0) As SAFEARRAYBOUND
-            Dim ptrArray As Long 'No need for LongPtr as we're on the x32 branch
-            Dim tVariant As TagVariant
-            Dim v As Variant
+            'Update Jan-2021
+            'The bug seems to have been fixed in newer version of Excel so, a
+            '   static array will be used to mimimize Win API calls
+            Static zArr As Variant
+            Static isArrSet As Boolean
             '
-            'Create empty array and store pointer
-            ptrArray = SafeArrayCreate(vType, 1, bounds(0))
-            '
-            'Create a Variant pointing to the array
-            tVariant.vt = vbArray + vType
-            tVariant.ptr = ptrArray
-            '
-            'Copy result
-            VariantCopy v, tVariant
-            ZeroLengthArray = v
-            '
-            'Clean-up
-            SafeArrayDestroy ptrArray
+            If Not isArrSet Then
+                zArr = Array()
+                '
+                'Try assigning to another variant
+                Dim v As Variant
+                On Error Resume Next
+                v = zArr
+                isArrSet = (Err.Number = 0)
+                On Error GoTo 0
+            End If
+            If Not isArrSet Then
+                Const vType As Integer = vbVariant
+                Dim bounds(0 To 0) As SAFEARRAYBOUND
+                Dim ptrArray As Long 'No need for LongPtr (x32 branch)
+                Dim tVariant As TagVariant
+                '
+                'Create empty array and store pointer
+                ptrArray = SafeArrayCreate(vType, 1, bounds(0))
+                '
+                'Create a Variant pointing to the array
+                tVariant.vt = vbArray + vType
+                tVariant.ptr = ptrArray
+                '
+                'Copy result
+                VariantCopy zArr, tVariant
+                '
+                'Clean-up
+                SafeArrayDestroy ptrArray
+                isArrSet = True
+            End If
+            ZeroLengthArray = zArr
         #End If
     #End If
 End Function
