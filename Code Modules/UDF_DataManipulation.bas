@@ -694,8 +694,10 @@ End Sub
 '   - arr: a 1D/2D array to slice
 '   - startRow: the index of the first row to be added to result
 '   - startColumn: the index of the first column to be added to result
-'   - [height_]: the number of rows to be returned
-'   - [width_]: the number of columns to be returned
+'   - [height_]: the number of rows to be returned. Default is 1.
+'                Use 0 to get all rows starting from startRow
+'   - [width_]: the number of columns to be returned. Default is 1.
+'               Use 0 to get all columns starting from startColumn
 'Notes:
 '   - excess height or width is ignored
 '   - uses LibArrayTools functions:
@@ -732,9 +734,12 @@ Attribute DM_SLICE.VB_ProcData.VB_Invoke_Func = " \n14"
     On Error GoTo FailReference
     Select Case LibArrayTools.GetArrayDimsCount(arr)
     Case 1
-        If startRow <> 1 Or height_ < 1 Then GoTo FailReference
+        If startRow <> 1 Or height_ < 0 Then GoTo FailReference
+        If width_ = 0 Then width_ = UBound(arr) - startColumn + 1
         DM_SLICE = LibArrayTools.Slice1DArray(arr, startColumn, width_)
     Case 2
+        If height_ = 0 Then height_ = UBound(arr, 1) - startRow + 1
+        If width_ = 0 Then width_ = UBound(arr, 2) - startColumn + 1
         DM_SLICE = LibArrayTools.Slice2DArray(arr, startRow, startColumn _
             , height_, width_)
     Case Else
@@ -766,9 +771,11 @@ Private Sub RegisterDMSlice()
     arg2 = "the index of the first row to be added to result"
     arg3 = "the index of the first column to be added to result"
     arg4 = "[Optional]" & vbNewLine _
-        & "the number of rows to be returned. Default is 1"
+        & "the number of rows to be returned. Default is 1. " _
+        & "Use 0 to get all rows starting from startRow"
     arg5 = "[Optional]" & vbNewLine _
-        & "the number of columns to be returned. Default is 1"
+        & "the number of columns to be returned. Default is 1" _
+        & "Use 0 to get all columns starting from startColumn"
     '
     Application.MacroOptions Macro:="DM_SLICE" _
         , Description:="Slices a 1D/2D Array or a 1-Area Range" _
