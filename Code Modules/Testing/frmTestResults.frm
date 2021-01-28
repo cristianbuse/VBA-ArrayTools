@@ -52,7 +52,7 @@ Private Sub UserForm_Initialize()
     End If
 End Sub
 
-Public Sub SetSummary(failedCount As Long, totalCount As Long, secondsDuration As Double)
+Public Sub SetSummary(ByVal failedCount As Long, ByVal totalCount As Long, ByVal secondsDuration As Double)
     lblPassed.Visible = (failedCount = 0)
     lblFailed.Visible = Not lblPassed.Visible
     '
@@ -60,13 +60,13 @@ Public Sub SetSummary(failedCount As Long, totalCount As Long, secondsDuration A
             & " (" & Format$(secondsDuration, "0.000") & " seconds)"
 End Sub
 
-Public Property Let TestList(arr() As String)
+Public Property Let TestList(ByRef arr() As String)
     On Error Resume Next
     lboxTests.List = arr
     On Error GoTo 0
 End Property
 
-Public Property Let CodeModuleName(newVal As String)
+Public Property Let CodeModuleName(ByVal newVal As String)
     m_codeModuleName = newVal
 End Property
 
@@ -103,7 +103,7 @@ End Sub
 '*******************************************************************************
 'Jumps to the selected method in the code pane
 '*******************************************************************************
-Private Sub JumpToMethod(methodName As String)
+Private Sub JumpToMethod(ByVal methodName As String)
     If Not IsAccessToVBProjectsOn() Then
         MsgBox "You do not have access to VBProject" & vbNewLine & vbNewLine _
             & "To turn access on, go to:" & vbNewLine & "File/Options/Trust " _

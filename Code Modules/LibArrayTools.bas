@@ -273,7 +273,7 @@ End Function
 '   - key_: the key being searched for
 'Does not raise errors
 '*******************************************************************************
-Public Function CollectionHasKey(coll As Collection, key_ As String) As Boolean
+Public Function CollectionHasKey(ByVal coll As Collection, key_ As String) As Boolean
     On Error Resume Next
     coll.Item key_
     CollectionHasKey = (Err.Number = 0)
@@ -287,7 +287,7 @@ End Function
 'Raises error:
 '   - 91: if Collection Object is not set
 '*******************************************************************************
-Public Function CollectionTo1DArray(coll As Collection) As Variant()
+Public Function CollectionTo1DArray(ByVal coll As Collection) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".CollectionTo1DArray"
     '
     'Check Input
@@ -330,7 +330,7 @@ End Function
 '   - coll = [1,2,3,4] and columnsCount = 2 >> returns [1,2]
 '                                                      [3,4] (2 rows 2 columns)
 '*******************************************************************************
-Public Function CollectionTo2DArray(coll As Collection, columnsCount As Long _
+Public Function CollectionTo2DArray(ByVal coll As Collection, ByVal columnsCount As Long _
 ) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".CollectionTo2DArray"
     '
@@ -347,7 +347,8 @@ Public Function CollectionTo2DArray(coll As Collection, columnsCount As Long _
     Dim rowsCount As Long: rowsCount = -VBA.Int(-coll.Count / columnsCount)
     Dim arr() As Variant: ReDim arr(0 To rowsCount - 1, 0 To columnsCount - 1)
     Dim i As Long: i = 0
-    Dim r As Long, c As Long
+    Dim r As Long
+    Dim c As Long
     Dim v As Variant
     '
     'Populate array
@@ -372,8 +373,7 @@ End Function
 'Notes:
 '   - see 'GetConditionOperator' for the operator conversion
 '*******************************************************************************
-Public Function CreateFilter(textOperator As String, compareValue As Variant _
-) As FILTER_PAIR
+Public Function CreateFilter(ByVal textOperator As String, ByVal compareValue As Variant) As FILTER_PAIR
     CreateFilter.cOperator = GetConditionOperator(textOperator)
     With CreateFilter.compValue
         .rank_ = GetDataTypeRank(compareValue)
@@ -395,8 +395,7 @@ End Function
 'Does not raise errors
 'Utility for 'CreateFilter' method
 '*******************************************************************************
-Private Function GetConditionOperator(ByVal textOperator As String _
-) As CONDITION_OPERATOR
+Private Function GetConditionOperator(ByVal textOperator As String) As CONDITION_OPERATOR
     Static collOperators As Collection
     '
     If collOperators Is Nothing Then
@@ -530,7 +529,7 @@ End Function
 '   - arr = [1,3,6,9] and filters = ["IN",[1,2,3,4]] >> returns [1,3]
 '   - arr = ["test","hes","et"] and filters = ["LIKE","*es?"] > returns ["test"]
 '*******************************************************************************
-Public Function Filter1DArray(arr, filters() As FILTER_PAIR) As Variant()
+Public Function Filter1DArray(arr As Variant, filters() As FILTER_PAIR) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".Filter1DArray"
     '
     'Check Input
@@ -597,7 +596,7 @@ End Function
 '       * 'column_' is out of bounds
 '       * values are incompatible (see 'IsValuePassingFilter' method)
 '*******************************************************************************
-Public Function Filter2DArray(arr, column_ As Long, filters() As FILTER_PAIR _
+Public Function Filter2DArray(arr As Variant, column_ As Long, filters() As FILTER_PAIR _
 ) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".Filter2DArray"
     '
@@ -640,7 +639,8 @@ Public Function Filter2DArray(arr, column_ As Long, filters() As FILTER_PAIR _
     Dim uppCol As Long: uppCol = UBound(arr, 2)
     Dim res() As Variant: ReDim res(0 To collRows.Count - 1, lowCol To uppCol)
     Dim needSet As Boolean
-    Dim r As Long, j As Long
+    Dim r As Long
+    Dim j As Long
     '
     'Copy rows to the result array (reference copy for objects)
     i = 0
@@ -674,9 +674,7 @@ End Function
 '        * 'filters' is not 1D
 '        * values are incompatible (see 'IsValuePassingFilter' method)
 '*******************************************************************************
-Public Function FilterCollection(ByRef coll As Collection _
-    , filters() As FILTER_PAIR _
-) As Collection
+Public Function FilterCollection(ByVal coll As Collection, filters() As FILTER_PAIR) As Collection
     Const fullMethodName As String = MODULE_NAME & ".FilterCollection"
     '
     'Check Input
@@ -880,8 +878,7 @@ End Function
 'Returns a string key for an array row and indicated columns
 'Utility for 'GetUniqueRows' method
 '*******************************************************************************
-Private Function GetRowKey(arr As Variant, rowIndex As Long, columns_() As Long _
-) As String
+Private Function GetRowKey(ByRef arr As Variant, ByRef rowIndex As Long, ByRef columns_() As Long) As String
     Dim colIndex As Variant
     Dim rowKey As String
     Dim key_ As String
@@ -999,7 +996,9 @@ Public Function InsertRowsAtIndex(arr As Variant _
     Dim upColBound As Long: upColBound = UBound(arr, 2)
     '
     Dim res() As Variant
-    Dim i As Long, j As Long, newRow As Long
+    Dim i As Long
+    Dim j As Long
+    Dim newRow As Long
     Dim v As Variant
     '
     'Create a new array with the required rows
@@ -1088,7 +1087,8 @@ Public Function InsertRowsAtValChange(arr As Variant _
         Exit Function
     End If
     '
-    Dim res(): ReDim res(lowRow To uppRow + rowsToInsert, lowCol To uppCol)
+    Dim res() As Variant
+    ReDim res(lowRow To uppRow + rowsToInsert, lowCol To uppCol)
     Dim j As Long
     Dim needSet As Boolean
     '
@@ -1113,7 +1113,7 @@ End Function
 'Does not raise errors
 '*******************************************************************************
 Public Function IntegerRange1D(ByVal startValue As Long, ByVal endValue As Long _
-    , Optional ByVal lowerBound = 0 _
+    , Optional ByVal lowerBound As Long = 0 _
 ) As Long()
     Dim diff As Long: diff = endValue - startValue
     Dim arr() As Long: ReDim arr(lowerBound To lowerBound + VBA.Math.Abs(diff))
@@ -1162,7 +1162,8 @@ Public Function Is2DArrayRowEmpty(arr As Variant _
         If VBA.IsObject(arr(rowIndex, j)) Then Exit Function
         v = arr(rowIndex, j)
         Select Case VBA.VarType(v)
-            Case VbVarType.vbEmpty 'Continue to next element
+            Case VbVarType.vbEmpty
+                'Continue to next element
             Case VbVarType.vbString
                 If Not ignoreEmptyStrings Then Exit Function
                 If v <> vbNullString Then Exit Function
@@ -1178,7 +1179,7 @@ End Function
 'Compatible types: Arrays, Collections, Custom Collections, Dictionaries etc.
 'Does not raise errors
 '*******************************************************************************
-Public Function IsIterable(list_ As Variant) As Boolean
+Public Function IsIterable(ByRef list_ As Variant) As Boolean
     Dim v As Variant
     '
     'Custom collections classes that use Attribute NewEnum.VB_UserMemID = -4 (to
@@ -1389,7 +1390,8 @@ End Function
 '   - arr1 = [1,2] and arr2 = [5,6] and verticalMerge = False > results [1,2,5,6]
 '            [3,4]            [7,8]                                     [3,4,7,8]
 '*******************************************************************************
-Public Function Merge2DArrays(arr1, arr2, ByVal verticalMerge As Boolean _
+Public Function Merge2DArrays(arr1 As Variant, arr2 As Variant _
+    , ByVal verticalMerge As Boolean _
 ) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".Merge2DArrays"
     '
@@ -1421,7 +1423,8 @@ Public Function Merge2DArrays(arr1, arr2, ByVal verticalMerge As Boolean _
     End If
     '
     Dim res() As Variant: ReDim res(0 To totalRows - 1, 0 To totalCols - 1)
-    Dim i As Long, j As Long
+    Dim i As Long
+    Dim j As Long
     Dim v As Variant
     '
     'Copy first array
@@ -1697,7 +1700,8 @@ Public Function OneDArrayTo2DArray(arr As Variant, ByVal columnsCount As Long _
     Dim rowsCount As Long: rowsCount = -VBA.Int(-elemCount / columnsCount)
     Dim res() As Variant
     Dim i As Long: i = 0
-    Dim r As Long, c As Long
+    Dim r As Long
+    Dim c As Long
     Dim v As Variant
     '
     'Populate result array
@@ -1820,7 +1824,7 @@ End Sub
 '   - arr = [1,2,3,4,5,6] and groupSize = 5 >> error 5 is raised
 '   - arr = [1,2,3,4,5,6] and groupSize = 6 >> returns [1,2,3,4,5,6]
 '*******************************************************************************
-Public Function Reverse1DArray(ByRef arr, Optional ByVal groupSize As Long = 1 _
+Public Function Reverse1DArray(ByRef arr As Variant, Optional ByVal groupSize As Long = 1 _
 ) As Variant 'Do not add () as in: ...) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".Reverse1DArray"
     '
@@ -1940,7 +1944,7 @@ End Function
 '   - coll = [1,2,3,4,5,6] and groupSize = 5 >> error 5 is raised
 '   - coll = [1,2,3,4,5,6] and groupSize = 6 >> returns [1,2,3,4,5,6]
 '*******************************************************************************
-Public Function ReverseCollection(ByRef coll As Collection _
+Public Function ReverseCollection(ByVal coll As Collection _
     , Optional ByVal groupSize As Long = 1 _
 ) As Collection
     Const fullMethodName As String = MODULE_NAME & ".ReverseCollection"
@@ -2032,7 +2036,8 @@ Public Function Sequence2D(ByVal termsCount As Long _
     '
     Dim rowsCount As Long: rowsCount = -VBA.Int(-termsCount / columnsCount)
     Dim arr() As Double: ReDim arr(0 To rowsCount - 1, 0 To columnsCount - 1)
-    Dim r As Long, c As Long
+    Dim r As Long
+    Dim c As Long
     Dim i As Long
     '
     For i = 0 To termsCount - 1
@@ -2049,7 +2054,7 @@ End Function
 '   to the objects found in the original collection
 'Returns Nothing if the source is Nothing
 '*******************************************************************************
-Public Function ShallowCopyCollection(sourceColl As Collection) As Collection
+Public Function ShallowCopyCollection(ByVal sourceColl As Collection) As Collection
     If sourceColl Is Nothing Then Exit Function
     '
     Dim v As Variant
@@ -2167,7 +2172,8 @@ Public Function Slice2DArray(arr As Variant _
     If endColumn > UBound(arr, 2) Then endColumn = UBound(arr, 2)
     '
     Dim res() As Variant
-    Dim i As Long, j As Long
+    Dim i As Long
+    Dim j As Long
     '
     'Add elements to result array
     ReDim res(0 To endRow - startRow, 0 To endColumn - startColumn)
@@ -2200,7 +2206,7 @@ End Function
 '   - arr = [1,2,3,4], startIndex = 1 and length_ = 2 >> results [1,2]
 '   - arr = [1,2,3,4], startIndex = 2 and length_ = 5 >> results [2,3,4]
 '*******************************************************************************
-Public Function SliceCollection(coll As Collection _
+Public Function SliceCollection(ByVal coll As Collection _
     , ByVal startIndex As Long, ByVal length_ As Long _
 ) As Collection
     Const fullMethodName As String = MODULE_NAME & ".SliceCollection"
@@ -2353,7 +2359,7 @@ End Sub
 '*******************************************************************************
 'Set a SORT_PIVOT struct from values
 '*******************************************************************************
-Private Sub SetSortPivot(ByRef sPivot As SORT_PIVOT, index As Long, v As Variant)
+Private Sub SetSortPivot(ByRef sPivot As SORT_PIVOT, ByVal index As Long, ByVal v As Variant)
     sPivot.index = index
     If VBA.IsObject(v) Then Set sPivot.value_ = v Else sPivot.value_ = v
 End Sub
@@ -2638,14 +2644,14 @@ End Function
 '*******************************************************************************
 'Swaps 2 values in a 1D Array, in-place
 '*******************************************************************************
-Private Sub Swap1DArrayValues(ByRef arr, index1 As Long, index2 As Long)
+Private Sub Swap1DArrayValues(ByRef arr As Variant, index1 As Long, index2 As Long)
     If index1 <> index2 Then SwapValues arr(index1), arr(index2)
 End Sub
 
 '*******************************************************************************
 'Swaps 2 values in a Collection, in-place
 '*******************************************************************************
-Private Sub SwapCollectionValues(ByRef coll, index1 As Long, index2 As Long)
+Private Sub SwapCollectionValues(ByVal coll As Collection, ByVal index1 As Long, ByVal index2 As Long)
     If index1 = index2 Then Exit Sub
     '
     Dim i1 As Long
@@ -2668,7 +2674,7 @@ End Sub
 '*******************************************************************************
 'Swaps 2 columns in a 2D Array, in-place
 '*******************************************************************************
-Private Sub Swap2DArrayColumns(ByRef arr, column1 As Long, column2 As Long)
+Private Sub Swap2DArrayColumns(ByRef arr As Variant, ByVal column1 As Long, ByVal column2 As Long)
     If column1 <> column2 Then
         Dim i As Long
         '
@@ -2681,7 +2687,7 @@ End Sub
 '*******************************************************************************
 'Swaps 2 rows in a 2D Array, in-place
 '*******************************************************************************
-Private Sub Swap2DArrayRows(ByRef arr, row1 As Long, row2 As Long)
+Private Sub Swap2DArrayRows(ByRef arr As Variant, ByVal row1 As Long, ByVal row2 As Long)
     If row1 <> row2 Then
         Dim j As Long
         '
@@ -2791,12 +2797,11 @@ End Function
 'Adds all values to the specified target collection, recursively
 'Called from ValuesToCollection
 '*******************************************************************************
-Private Sub AddToCollection(values As Variant, ByRef collTarget As Collection _
+Private Sub AddToCollection(values As Variant, ByVal coll As Collection _
     , ByVal nestType As NESTING_TYPE, ByVal traverseType As ARRAY_TRAVERSE_TYPE _
     , ByVal hasSiblings As Boolean, Optional ByVal isRoot As Boolean = False _
 )
     Dim v As Variant
-    Dim coll As Collection: Set coll = collTarget
     Dim hasMultiItems As Boolean
     '
     If VBA.IsObject(values) Then
@@ -2845,11 +2850,11 @@ End Sub
 '*******************************************************************************
 'Utility for 'AddToCollection'
 '*******************************************************************************
-Private Function NeedsNesting(nestType As NESTING_TYPE _
-    , hasMultiItems As Boolean _
-    , hasSiblings As Boolean _
-    , isRoot As Boolean _
-)
+Private Function NeedsNesting(ByVal nestType As NESTING_TYPE _
+    , ByVal hasMultiItems As Boolean _
+    , ByVal hasSiblings As Boolean _
+    , ByVal isRoot As Boolean _
+) As Boolean
     Select Case nestType
         Case nestAll:            NeedsNesting = Not isRoot
         Case nestMultiItemsOnly: NeedsNesting = (hasMultiItems And hasSiblings)
@@ -2860,7 +2865,7 @@ End Function
 '*******************************************************************************
 'Utility for 'AddToCollection'
 '*******************************************************************************
-Private Function AddNewCollectionTo(collTarget As Collection) As Collection
+Private Function AddNewCollectionTo(ByVal collTarget As Collection) As Collection
     Set AddNewCollectionTo = New Collection
     collTarget.Add AddNewCollectionTo
 End Function

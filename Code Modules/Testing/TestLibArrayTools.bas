@@ -55,7 +55,7 @@ Private Const ERR_ASSERT_FAILED As Long = &HBAD
 '*******************************************************************************
 'Creates an EXPECTED_ERROR struct
 '*******************************************************************************
-Private Function NewExpectedError(code_) As EXPECTED_ERROR
+Private Function NewExpectedError(ByVal code_ As Long) As EXPECTED_ERROR
     NewExpectedError.code_ = code_
     NewExpectedError.wasRaised = False
 End Function
@@ -135,7 +135,7 @@ End Sub
 '*******************************************************************************
 'Displays the results for an array of TEST_RESULT structs
 '*******************************************************************************
-Private Sub ShowTestResults(arr() As TEST_RESULT, secondsDuration As Double)
+Private Sub ShowTestResults(arr() As TEST_RESULT, ByVal secondsDuration As Double)
     Dim testResult As TEST_RESULT
     Dim i As Long
     Dim failedCount As Long
@@ -167,7 +167,9 @@ End Sub
 'Raises error ERR_ASSERT_FAILED if 'boolExpression' is False with the
 '   Err.Description set to 'detailsIfFalse' value
 '*******************************************************************************
-Private Sub AssertIsTrue(boolExpression As Boolean, Optional detailsIfFalse As String)
+Private Sub AssertIsTrue(ByVal boolExpression As Boolean _
+    , Optional ByVal detailsIfFalse As String _
+)
     If Not boolExpression Then Err.Raise ERR_ASSERT_FAILED, , detailsIfFalse
 End Sub
 
@@ -175,7 +177,9 @@ End Sub
 'Raises error ERR_ASSERT_FAILED if 'boolExpression' is True with the
 '   Err.Description set to 'detailsIfFalse' value
 '*******************************************************************************
-Private Sub AssertIsFalse(boolExpression As Boolean, Optional detailsIfFalse As String)
+Private Sub AssertIsFalse(ByVal boolExpression As Boolean _
+    , Optional ByVal detailsIfFalse As String _
+)
     If boolExpression Then Err.Raise ERR_ASSERT_FAILED, , detailsIfFalse
 End Sub
 
@@ -183,7 +187,9 @@ End Sub
 'Raises error ERR_ASSERT_FAILED if vActual <> vExpected with the
 '   Err.Description set to 'detailsIfFalse' value
 '*******************************************************************************
-Private Sub AssertAreEqual(vExpected, vActual, Optional detailsIfFalse As String)
+Private Sub AssertAreEqual(ByVal vExpected As Variant, ByVal vActual As Variant _
+    , Optional ByVal detailsIfFalse As String _
+)
     If Not vActual = vExpected Then
         Err.Raise ERR_ASSERT_FAILED, , "Expected " & vExpected & " but got " _
             & vActual & ". " & detailsIfFalse
@@ -193,7 +199,7 @@ End Sub
 '*******************************************************************************
 'Raises error ERR_ASSERT_FAILED with the Err.Description set to 'failDetails'
 '*******************************************************************************
-Private Sub AssertFail(failDetails As String)
+Private Sub AssertFail(ByVal failDetails As String)
     Err.Raise ERR_ASSERT_FAILED, , failDetails
 End Sub
 
@@ -205,7 +211,9 @@ End Sub
 'Converts a multidimensional array to comma separated values and adds square
 '   brackets [] around each dimension
 '*******************************************************************************
-Private Function ArrayToCSV(arr, Optional ByVal delimiter As String = ",") As String
+Private Function ArrayToCSV(arr As Variant _
+    , Optional ByVal delimiter As String = "," _
+) As String
     Const fullMethodName As String = MODULE_NAME & ".ArrayToCSV"
     '
     If LibArrayTools.GetArrayDimsCount(arr) = 0 Then
@@ -218,7 +226,7 @@ End Function
 'Converts a collection to comma separated values and adds square brackets []
 '   around main collection and all nested collections
 '*******************************************************************************
-Private Function CollectionToCSV(coll As Collection _
+Private Function CollectionToCSV(ByVal coll As Collection _
     , Optional ByVal delimiter As String = "," _
 ) As String
     Const fullMethodName As String = MODULE_NAME & ".CollectionToCSV"
@@ -554,7 +562,7 @@ Private Function TestCollectionToCSV() As TEST_RESULT
     coll.Add Array(ZeroLengthArray(), ZeroLengthArray())
     '
     AssertAreEqual vExpected:="[[] [] 1 [[] []]]", vActual:=CollectionToCSV(coll, " ")
-    AssertAreEqual vExpected:="[[][]1[[][]]]", vActual:=CollectionToCSV(coll, "")
+    AssertAreEqual vExpected:="[[][]1[[][]]]", vActual:=CollectionToCSV(coll, vbNullString)
     '
     testResult.passed = True
 ExitTest:
@@ -612,7 +620,7 @@ Private Function TestArrayToCSV() As TEST_RESULT
     arr = Array(ZeroLengthArray(), ZeroLengthArray(), 1, Array(ZeroLengthArray(), ZeroLengthArray()))
     '
     AssertAreEqual vExpected:="[[] [] 1 [[] []]]", vActual:=ArrayToCSV(arr, " ")
-    AssertAreEqual vExpected:="[[][]1[[][]]]", vActual:=ArrayToCSV(arr, "")
+    AssertAreEqual vExpected:="[[][]1[[][]]]", vActual:=ArrayToCSV(arr, vbNullString)
     '
     testResult.passed = True
 ExitTest:
@@ -730,7 +738,7 @@ Private Function TestCollectionTo1DArray() As TEST_RESULT
         AssertFail "Err not raised. Collection not set"
     End If
     '
-    Dim arr: arr = LibArrayTools.CollectionTo1DArray(New Collection)
+    Dim arr() As Variant: arr = LibArrayTools.CollectionTo1DArray(New Collection)
     AssertIsTrue LBound(arr) > UBound(arr), "Expected (0, -1) bounds"
     '
     Dim coll As New Collection
@@ -788,7 +796,7 @@ Private Function TestCollectionTo2DArray() As TEST_RESULT
         AssertFail "Err not raised. Number of columns must be positive"
     End If
     '
-    Dim arr: arr = LibArrayTools.CollectionTo2DArray(New Collection, 1)
+    Dim arr() As Variant: arr = LibArrayTools.CollectionTo2DArray(New Collection, 1)
     AssertIsTrue LBound(arr) > UBound(arr), "Expected (0, -1) bounds"
     '
     Dim coll As New Collection
@@ -848,7 +856,7 @@ Private Function TestNDArrayTo1DArray() As TEST_RESULT
     LibArrayTools.NDArrayTo1DArray Nothing, columnWise
     If Not expectedError.wasRaised Then AssertFail "Err not raised. No Array"
     '
-    Dim arr()
+    Dim arr() As Variant
     '
     expectedError = NewExpectedError(5)
     LibArrayTools.NDArrayTo1DArray arr, columnWise
@@ -969,8 +977,8 @@ Private Function TestValuesToCollection() As TEST_RESULT
     AssertAreEqual 0, c.Count, "Collection should have no element"
     '
     Dim coll As New Collection
-    Dim arr()
-    Dim arr2D()
+    Dim arr() As Variant
+    Dim arr2D() As Variant
     Dim tempColl As New Collection
     '
     ReDim arr2D(1 To 2, 1 To 2)
@@ -1069,7 +1077,7 @@ Private Function TestIsIterable() As TEST_RESULT
     Dim expectedError As EXPECTED_ERROR
     On Error GoTo ErrorHandler
     '
-    Dim arr()
+    Dim arr()  As Variant
     Dim coll As Collection
     '
     AssertIsFalse LibArrayTools.IsIterable(arr), "Uninitialized array is not iterable"
@@ -1172,7 +1180,7 @@ Private Function TestIsValuePassingFilter() As TEST_RESULT
         AssertFail "Err not raised. Filter Arrays require IN/NOT IN operator"
     End If
     '
-    Dim arr()
+    Dim arr() As Variant
     filter = LibArrayTools.CreateFilter("IN", arr)
     '
     expectedError = NewExpectedError(5)
@@ -1199,7 +1207,7 @@ Private Function TestIsValuePassingFilter() As TEST_RESULT
     filter = LibArrayTools.CreateFilter("<>", Null)
     AssertIsTrue LibArrayTools.IsValuePassingFilter(Empty, filter)
     '
-    filter = LibArrayTools.CreateFilter("=", "")
+    filter = LibArrayTools.CreateFilter("=", vbNullString)
     AssertIsTrue LibArrayTools.IsValuePassingFilter(Empty, filter)
     '
     filter = LibArrayTools.CreateFilter("<>", "256")
@@ -1570,7 +1578,7 @@ Private Function TestFilterCollection() As TEST_RESULT
     '
     Dim arr() As Variant
     '
-    Set coll = LibArrayTools.Collection(1, "", 2, "", Null, "", Empty, 3, Application)
+    Set coll = LibArrayTools.Collection(1, vbNullString, 2, vbNullString, Null, vbNullString, Empty, 3, Application)
     filters = LibArrayTools.CreateFiltersArray(">=", 1)
     AssertAreEqual vExpected:="[1,2,3]" _
                  , vActual:=CollectionToCSV(LibArrayTools.FilterCollection(coll, filters)) _
@@ -1846,7 +1854,7 @@ Private Function TestGetUniqueValues() As TEST_RESULT
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
     Set coll = LibArrayTools.NDArrayToCollections(Array(1, 2, 3))
-    arr = Array(coll, 1, 2, coll, 1, Null, 3, Empty, "", 2, coll, True, "2" _
+    arr = Array(coll, 1, 2, coll, 1, Null, 3, Empty, vbNullString, 2, coll, True, "2" _
         , "True", Null, False, coll)
     '
     AssertAreEqual vExpected:="[[1,2,3],1,2,Null,3,Empty,"""",True,""2"",""True"",False]" _
@@ -2063,7 +2071,7 @@ Private Function TestIs2DArrayRowEmpty() As TEST_RESULT
     LibArrayTools.Is2DArrayRowEmpty arr, 0, False
     If Not expectedError.wasRaised Then AssertFail "Err not raised. Not 2D"
     '
-    arr = LibArrayTools.OneDArrayTo2DArray(Array(1, 2, 3, 4, 5, 6, "", ""), 2)
+    arr = LibArrayTools.OneDArrayTo2DArray(Array(1, 2, 3, 4, 5, 6, vbNullString, vbNullString), 2)
     '
     expectedError = NewExpectedError(5)
     LibArrayTools.Is2DArrayRowEmpty arr, -1, False
@@ -2077,7 +2085,7 @@ Private Function TestIs2DArrayRowEmpty() As TEST_RESULT
     AssertIsFalse LibArrayTools.Is2DArrayRowEmpty(arr, 3, False), "Not empty"
     AssertIsTrue LibArrayTools.Is2DArrayRowEmpty(arr, 3, True), "Empty"
     '
-    arr = LibArrayTools.OneDArrayTo2DArray(Array(1, Empty, Empty, Empty, Empty, ""), 2)
+    arr = LibArrayTools.OneDArrayTo2DArray(Array(1, Empty, Empty, Empty, Empty, vbNullString), 2)
     '
     AssertIsFalse LibArrayTools.Is2DArrayRowEmpty(arr, 0, False), "Not empty"
     AssertIsFalse LibArrayTools.Is2DArrayRowEmpty(arr, 0, True), "Not empty"
@@ -3042,32 +3050,32 @@ Private Function TestSort1DArray() As TEST_RESULT
                  , vActual:=ArrayToCSV(LibArrayTools.Sort1DArray(arr)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
-    arr = Array(1, Null, Empty, "", "test", 5, 1, Empty, Array(1, 2, 3))
+    arr = Array(1, Null, Empty, vbNullString, "test", 5, 1, Empty, Array(1, 2, 3))
     AssertAreEqual vExpected:="[1,1,5,"""",""test"",Null,[1,2,3],Empty,Empty]" _
                  , vActual:=ArrayToCSV(LibArrayTools.Sort1DArray(arr)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
-    arr = Array(1, Null, Empty, "", "test", 5, 1, Empty, Array(1, 2, 3))
+    arr = Array(1, Null, Empty, vbNullString, "test", 5, 1, Empty, Array(1, 2, 3))
     AssertAreEqual vExpected:="[[1,2,3],Null,""test"","""",5,1,1,Empty,Empty]" _
                  , vActual:=ArrayToCSV(LibArrayTools.Sort1DArray(arr, False)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
-    arr = Array(1, "2", 2, Null, Empty, "", "test", 5, "4", 1)
+    arr = Array(1, "2", 2, Null, Empty, vbNullString, "test", 5, "4", 1)
     AssertAreEqual vExpected:="[1,1,""2"",2,""4"",5,"""",""test"",Null,Empty]" _
                  , vActual:=ArrayToCSV(LibArrayTools.Sort1DArray(arr, True, True)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
-    arr = Array(1, "2", 2, Null, Empty, "", "test", 5, "4", 1)
+    arr = Array(1, "2", 2, Null, Empty, vbNullString, "test", 5, "4", 1)
     AssertAreEqual vExpected:="[1,1,2,5,"""",""2"",""4"",""test"",Null,Empty]" _
                  , vActual:=ArrayToCSV(LibArrayTools.Sort1DArray(arr, True, False)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
-    arr = Array(1, "2", 2, Null, Empty, "", "test", 5, "4", 1)
+    arr = Array(1, "2", 2, Null, Empty, vbNullString, "test", 5, "4", 1)
     AssertAreEqual vExpected:="[Null,""test"","""",5,""4"",""2"",2,1,1,Empty]" _
                  , vActual:=ArrayToCSV(LibArrayTools.Sort1DArray(arr, False, True)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
-    arr = Array(1, "2", 2, Null, Empty, "", "test", 5, "4", 1)
+    arr = Array(1, "2", 2, Null, Empty, vbNullString, "test", 5, "4", 1)
     AssertAreEqual vExpected:="[Null,""test"",""4"",""2"","""",5,2,1,1,Empty]" _
                  , vActual:=ArrayToCSV(LibArrayTools.Sort1DArray(arr, False, False)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
@@ -3252,32 +3260,32 @@ Private Function TestSortCollection() As TEST_RESULT
                  , vActual:=CollectionToCSV(LibArrayTools.SortCollection(coll)) _
                  , detailsIfFalse:="Collection doesn't have the expected elements"
     '
-    Set coll = LibArrayTools.Collection(1, Null, Empty, "", "test", 5, 1, Empty, Array(1, 2, 3))
+    Set coll = LibArrayTools.Collection(1, Null, Empty, vbNullString, "test", 5, 1, Empty, Array(1, 2, 3))
     AssertAreEqual vExpected:="[1,1,5,"""",""test"",Null,[1,2,3],Empty,Empty]" _
                  , vActual:=CollectionToCSV(LibArrayTools.SortCollection(coll)) _
                  , detailsIfFalse:="Collection doesn't have the expected elements"
     '
-    Set coll = LibArrayTools.Collection(1, Null, Empty, "", "test", 5, 1, Empty, Array(1, 2, 3))
+    Set coll = LibArrayTools.Collection(1, Null, Empty, vbNullString, "test", 5, 1, Empty, Array(1, 2, 3))
     AssertAreEqual vExpected:="[[1,2,3],Null,""test"","""",5,1,1,Empty,Empty]" _
                  , vActual:=CollectionToCSV(LibArrayTools.SortCollection(coll, False)) _
                  , detailsIfFalse:="Collection doesn't have the expected elements"
     '
-    Set coll = LibArrayTools.Collection(1, "2", 2, Null, Empty, "", "test", 5, "4", 1)
+    Set coll = LibArrayTools.Collection(1, "2", 2, Null, Empty, vbNullString, "test", 5, "4", 1)
     AssertAreEqual vExpected:="[1,1,""2"",2,""4"",5,"""",""test"",Null,Empty]" _
                  , vActual:=CollectionToCSV(LibArrayTools.SortCollection(coll, True, True)) _
                  , detailsIfFalse:="Collection doesn't have the expected elements"
     '
-    Set coll = LibArrayTools.Collection(1, "2", 2, Null, Empty, "", "test", 5, "4", 1)
+    Set coll = LibArrayTools.Collection(1, "2", 2, Null, Empty, vbNullString, "test", 5, "4", 1)
     AssertAreEqual vExpected:="[1,1,2,5,"""",""2"",""4"",""test"",Null,Empty]" _
                  , vActual:=CollectionToCSV(LibArrayTools.SortCollection(coll, True, False)) _
                  , detailsIfFalse:="Collection doesn't have the expected elements"
     '
-    Set coll = LibArrayTools.Collection(1, "2", 2, Null, Empty, "", "test", 5, "4", 1)
+    Set coll = LibArrayTools.Collection(1, "2", 2, Null, Empty, vbNullString, "test", 5, "4", 1)
     AssertAreEqual vExpected:="[Null,""test"","""",5,""4"",""2"",2,1,1,Empty]" _
                  , vActual:=CollectionToCSV(LibArrayTools.SortCollection(coll, False, True)) _
                  , detailsIfFalse:="Collection doesn't have the expected elements"
     '
-    Set coll = LibArrayTools.Collection(1, "2", 2, Null, Empty, "", "test", 5, "4", 1)
+    Set coll = LibArrayTools.Collection(1, "2", 2, Null, Empty, vbNullString, "test", 5, "4", 1)
     AssertAreEqual vExpected:="[Null,""test"",""4"",""2"","""",5,2,1,1,Empty]" _
                  , vActual:=CollectionToCSV(LibArrayTools.SortCollection(coll, False, False)) _
                  , detailsIfFalse:="Collection doesn't have the expected elements"
@@ -3330,7 +3338,8 @@ Private Function TestSwapValues() As TEST_RESULT
     Dim expectedError As EXPECTED_ERROR
     On Error GoTo ErrorHandler
     '
-    Dim v1, v2
+    Dim v1 As Variant
+    Dim v2 As Variant
     '
     v1 = 1
     v2 = 7

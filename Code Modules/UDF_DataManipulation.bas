@@ -77,7 +77,7 @@ Option Explicit
 '   - a dummy parameter is used to hide the methods from the Excel Macro Dialog
 '   - ArgumentDescriptions not available for older versions of Excel e.g. 2007
 '###############################################################################
-Public Sub RegisterDMFunctions(Optional dummy As Boolean)
+Public Sub RegisterDMFunctions(Optional ByVal dummy As Boolean)
     RegisterDMArray
     RegisterDMFilter
     RegisterDMInsert
@@ -89,7 +89,7 @@ Public Sub RegisterDMFunctions(Optional dummy As Boolean)
     RegisterDMSort
     RegisterDMUnique
 End Sub
-Public Sub UnregisterDMFunctions(Optional dummy As Boolean)
+Public Sub UnregisterDMFunctions(Optional ByVal dummy As Boolean)
     UnregisterDMArray
     UnregisterDMFilter
     UnRegisterDMInsert
@@ -142,7 +142,7 @@ Attribute DM_ARRAY.VB_ProcData.VB_Invoke_Func = " \n14"
         Dim remainders As Long: remainders = coll.Count Mod columnsCount
         '
         If remainders > 0 Then
-            Dim errNA: errNA = VBA.CVErr(xlErrNA)
+            Dim errNA As Variant: errNA = VBA.CVErr(xlErrNA)
             Dim i As Long
             '
             For i = 1 To columnsCount - remainders
@@ -228,7 +228,8 @@ Attribute DM_FILTER.VB_ProcData.VB_Invoke_Func = " \n14"
     If Not VBA.IsArray(arr) Then arr = Array(arr)
     '
     Select Case LibArrayTools.GetArrayDimsCount(arr)
-    Case 2 'Continue
+    Case 2
+        'Continue
     Case 1 'Convert to 1-row 2D array and adjust column index
         Dim colsCount As Long: colsCount = UBound(arr) - LBound(arr) + 1
         arr = LibArrayTools.OneDArrayTo2DArray(arr, colsCount)
@@ -314,7 +315,8 @@ Attribute DM_INSERT.VB_ProcData.VB_Invoke_Func = " \n14"
     If Not VBA.IsArray(arr) Then arr = Array(arr)
     '
     Select Case LibArrayTools.GetArrayDimsCount(arr)
-    Case 2 'Continue
+    Case 2
+        'Continue
     Case 1 'Convert to 1-row 2D array and adjust beforeRow index
         Dim colsCount As Long: colsCount = UBound(arr) - LBound(arr) + 1
         arr = LibArrayTools.OneDArrayTo2DArray(arr, colsCount)
@@ -959,7 +961,7 @@ Attribute DM_UNIQUE.VB_ProcData.VB_Invoke_Func = " \n14"
     '
     'Convert single value to 1-element 1D array with lower bound set to 1
     If Not VBA.IsArray(arr) Then
-        Dim tempArr(1 To 1)
+        Dim tempArr(1 To 1) As Variant
         tempArr(1) = arr
         arr = tempArr
     End If

@@ -187,12 +187,12 @@ Public Sub DemoSort()
     Dim arr() As Variant
     '
     'Sort 1D Array with default options
-    arr = Sort1DArray(Array(1, "2", 2, Null, Empty, "", "test", 5, "4", 1))
+    arr = Sort1DArray(Array(1, "2", 2, Null, Empty, vbNullString, "test", 5, "4", 1))
     'Result:
     '   [1,1,"2",2,"4",5,"","test",Null,Empty]
     '
     'Sort 1D Array while considering numbers stored as text to be just text
-    arr = Sort1DArray(Array(1, "2", 2, Null, Empty, "", "test", 5, "4", 1), True, False)
+    arr = Sort1DArray(Array(1, "2", 2, Null, Empty, vbNullString, "test", 5, "4", 1), True, False)
     'Result:
     '   [1,1,2,5,","2","4","","test",Null,Empty]
     '
@@ -268,3 +268,5 @@ Public Sub DemoSlicing()
     'Result:
     '   [3,4]
 End Sub
+
+
