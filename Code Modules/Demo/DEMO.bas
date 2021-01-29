@@ -268,5 +268,3 @@ Public Sub DemoSlicing()
     'Result:
     '   [3,4]
 End Sub
-
-

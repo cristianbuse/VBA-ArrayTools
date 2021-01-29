@@ -118,7 +118,7 @@ End Sub
 '*******************************************************************************
 'Adds a single TEST_RESULT struct to the end of a target array
 '*******************************************************************************
-Private Sub AddTestResult(ByRef arrTarget() As TEST_RESULT, testResult As TEST_RESULT)
+Private Sub AddTestResult(ByRef arrTarget() As TEST_RESULT, ByRef testResult As TEST_RESULT)
     Dim lowerBound As Long
     Dim upperBound As Long
     '

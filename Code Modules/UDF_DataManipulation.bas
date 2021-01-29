@@ -119,8 +119,6 @@ End Sub
 Public Function DM_ARRAY(ByVal columnsCount As Long _
     , ParamArray values() As Variant _
 ) As Variant
-Attribute DM_ARRAY.VB_Description = "Returns specified value(s) in a joined 1D or 2D array"
-Attribute DM_ARRAY.VB_ProcData.VB_Invoke_Func = " \n14"
     Application.Volatile False
     #If USE_LIB_FAST_UDFS Then
         LibUDFs.TriggerFastUDFCalculation
@@ -207,7 +205,7 @@ End Sub
 '         accepts pattern as the comparison value. For available patterns check
 '         the help for the VBA LIKE operator
 '*******************************************************************************
-    Public Function DM_FILTER(columnIndex As Long, arr As Variant _
+Public Function DM_FILTER(ByVal columnIndex As Long, ByRef arr As Variant _
     , ParamArray filters() As Variant _
 ) As Variant
 Attribute DM_FILTER.VB_Description = "Filters a 2D array/range by the specified column index"
@@ -293,12 +291,9 @@ End Sub
 '   - single values are converted to 1-element 1D array
 '   - 1D arrays are converted to 1-row 2D arrays
 '*******************************************************************************
-Public Function DM_INSERT(arr As Variant _
-    , ByVal rowsCount As Long _
+Public Function DM_INSERT(ByRef arr As Variant, ByVal rowsCount As Long _
     , ByVal beforeRow As Long _
 ) As Variant
-Attribute DM_INSERT.VB_Description = "Inserts rows in a 2D Array"
-Attribute DM_INSERT.VB_ProcData.VB_Invoke_Func = " \n14"
     Application.Volatile False
     #If USE_LIB_FAST_UDFS Then
         LibUDFs.TriggerFastUDFCalculation
@@ -375,9 +370,8 @@ End Sub
 '   - single values are converted to 1-element 1D array
 '   - 1D arrays are converted to 1-row 2D arrays
 '*******************************************************************************
-Public Function DM_INSERT2(arr As Variant _
-    , ByVal rowsCount As Long _
-    , ByVal columnIndex As Long _
+Public Function DM_INSERT2(ByRef arr As Variant _
+    , ByVal rowsCount As Long, ByVal columnIndex As Long _
     , Optional ByVal topRowsCount As Long = 0 _
     , Optional ByVal bottomRowsCount As Long = 0 _
 ) As Variant
@@ -468,7 +462,7 @@ End Sub
 '       * OneDArrayTo2DArray
 '       * ReplaceEmptyInArray
 '*******************************************************************************
-Public Function DM_MERGE(arr1 As Variant, arr2 As Variant _
+Public Function DM_MERGE(ByRef arr1 As Variant, ByRef arr2 As Variant _
     , Optional ByVal verticalMerge As Boolean = False _
 ) As Variant
 Attribute DM_MERGE.VB_Description = "Merges/Combines two 1D/2D Arrays"
@@ -565,7 +559,7 @@ End Sub
 '       * Reverse1DArray
 '       * Reverse2DArray
 '*******************************************************************************
-Public Function DM_REVERSE(arr As Variant _
+Public Function DM_REVERSE(ByRef arr As Variant _
     , Optional ByVal groupSize As Long = 1 _
     , Optional ByVal verticalFlip As Boolean = False _
 ) As Variant
@@ -709,7 +703,7 @@ End Sub
 '       * Slice2DArray
 '   - single values are converted to 1-element 1D array
 '*******************************************************************************
-Public Function DM_SLICE(arr As Variant _
+Public Function DM_SLICE(ByRef arr As Variant _
     , ByVal startRow As Long, ByVal startColumn As Long _
     , Optional ByVal height_ As Long = 1, Optional ByVal width_ As Long = 1 _
 ) As Variant
@@ -822,7 +816,7 @@ End Sub
 '       * Sort2DArray
 '       * TransposeArray
 '*******************************************************************************
-Public Function DM_SORT(arr As Variant _
+Public Function DM_SORT(ByRef arr As Variant _
     , Optional ByVal sortIndex As Long = 1 _
     , Optional ByVal sortAscending As Boolean = True _
     , Optional ByVal sortTextNumberAsNumber As Boolean = True _
@@ -941,7 +935,7 @@ End Sub
 '       * TransposeArray
 '       * ValuesToCollection
 '*******************************************************************************
-Public Function DM_UNIQUE(arr As Variant _
+Public Function DM_UNIQUE(ByRef arr As Variant _
     , Optional ByVal indexes As Variant = 0 _
     , Optional ByVal byColumn As Boolean = True _
 ) As Variant
