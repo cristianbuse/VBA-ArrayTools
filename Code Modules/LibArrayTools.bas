@@ -257,8 +257,9 @@ End Type
 '*******************************************************************************
 Public Function Collection(ParamArray values() As Variant) As Collection
     Dim v As Variant
-    Dim coll As New Collection
+    Dim coll As Collection
     '
+    Set coll = New Collection
     For Each v In values
         coll.Add v
     Next v
@@ -273,7 +274,7 @@ End Function
 '   - key_: the key being searched for
 'Does not raise errors
 '*******************************************************************************
-Public Function CollectionHasKey(ByVal coll As Collection, key_ As String) As Boolean
+Public Function CollectionHasKey(ByVal coll As Collection, ByVal key_ As String) As Boolean
     On Error Resume Next
     coll.Item key_
     CollectionHasKey = (Err.Number = 0)
@@ -330,8 +331,7 @@ End Function
 '   - coll = [1,2,3,4] and columnsCount = 2 >> returns [1,2]
 '                                                      [3,4] (2 rows 2 columns)
 '*******************************************************************************
-Public Function CollectionTo2DArray(ByVal coll As Collection, ByVal columnsCount As Long _
-) As Variant()
+Public Function CollectionTo2DArray(ByVal coll As Collection, ByVal columnsCount As Long) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".CollectionTo2DArray"
     '
     'Check Input
@@ -415,7 +415,7 @@ Private Function GetConditionOperator(ByVal textOperator As String) As CONDITION
     End If
     '
     On Error Resume Next
-    GetConditionOperator = collOperators(textOperator)
+    GetConditionOperator = collOperators.Item(textOperator)
     If Err.Number <> 0 Then GetConditionOperator = opNone
     On Error GoTo 0
 End Function
@@ -424,7 +424,7 @@ End Function
 'Creates a collection with text keys corresponding to the values passed in
 'Utility for 'CreateFilter' method
 '*******************************************************************************
-Private Function CreateTextKeys(values As Variant) As Collection
+Private Function CreateTextKeys(ByRef values As Variant) As Collection
     Dim collResult As New Collection
     Dim key_ As String
     '
@@ -460,8 +460,7 @@ End Function
 '   - this method can be used to quickly create an array of FILTER_PAIRs to be
 '     used with the 'Filter...' methods
 '*******************************************************************************
-Public Function CreateFiltersArray(ParamArray valuePairs() As Variant _
-) As FILTER_PAIR()
+Public Function CreateFiltersArray(ParamArray valuePairs() As Variant) As FILTER_PAIR()
     Const fullMethodName As String = MODULE_NAME & ".CreateFiltersArray"
     '
     Dim collFilterPairs As Collection
@@ -499,7 +498,7 @@ End Function
 '   assigned to a Variant (except UDTs from a global module e.g. from a typelib)
 'Utility for 'CreateFiltersArray' method
 '*******************************************************************************
-Private Function GetFiltersDimsCount(arr() As FILTER_PAIR) As Long
+Private Function GetFiltersDimsCount(ByRef arr() As FILTER_PAIR) As Long
     Const MAX_DIMENSION As Long = 60
     Dim dimension As Long
     Dim tempBound As Long
@@ -529,7 +528,7 @@ End Function
 '   - arr = [1,3,6,9] and filters = ["IN",[1,2,3,4]] >> returns [1,3]
 '   - arr = ["test","hes","et"] and filters = ["LIKE","*es?"] > returns ["test"]
 '*******************************************************************************
-Public Function Filter1DArray(arr As Variant, filters() As FILTER_PAIR) As Variant()
+Public Function Filter1DArray(ByRef arr As Variant, ByRef filters() As FILTER_PAIR) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".Filter1DArray"
     '
     'Check Input
@@ -596,7 +595,8 @@ End Function
 '       * 'column_' is out of bounds
 '       * values are incompatible (see 'IsValuePassingFilter' method)
 '*******************************************************************************
-Public Function Filter2DArray(arr As Variant, column_ As Long, filters() As FILTER_PAIR _
+Public Function Filter2DArray(ByRef arr As Variant, ByVal column_ As Long _
+    , ByRef filters() As FILTER_PAIR _
 ) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".Filter2DArray"
     '
@@ -674,7 +674,7 @@ End Function
 '        * 'filters' is not 1D
 '        * values are incompatible (see 'IsValuePassingFilter' method)
 '*******************************************************************************
-Public Function FilterCollection(ByVal coll As Collection, filters() As FILTER_PAIR) As Collection
+Public Function FilterCollection(ByVal coll As Collection, ByRef filters() As FILTER_PAIR) As Collection
     Const fullMethodName As String = MODULE_NAME & ".FilterCollection"
     '
     'Check Input
@@ -718,7 +718,7 @@ End Function
 '   useful only if the method is called many times (tens of thousands)
 'Note that a zero-length array has 1 dimension! Ex. Array() returns (0 to -1)
 '*******************************************************************************
-Public Function GetArrayDimsCount(arr As Variant) As Long
+Public Function GetArrayDimsCount(ByRef arr As Variant) As Long
     'In Visual Basic, you can declare arrays with up to 60 dimensions
     Const MAX_DIMENSION As Long = 60
     Dim dimension As Long
@@ -741,7 +741,7 @@ End Function
 'Returns the Number of elements for an input array
 'Returns 0 if array is uninitialized or input is not an array
 '*******************************************************************************
-Public Function GetArrayElemCount(arr As Variant) As Long
+Public Function GetArrayElemCount(ByRef arr As Variant) As Long
     On Error Resume Next
     GetArrayElemCount = GetArrayDescriptor(arr, rowWise, False).elemCount
     On Error GoTo 0
@@ -763,7 +763,7 @@ End Function
 'Notes:
 '   - numbers with decimal places are floored using the VBA.Int function
 '*******************************************************************************
-Public Function GetUniqueIntegers(iterableList As Variant _
+Public Function GetUniqueIntegers(ByRef iterableList As Variant _
     , Optional ByVal minAllowed As Long = &H80000000 _
     , Optional ByVal maxAllowed As Long = &H7FFFFFFF _
 ) As Long()
@@ -823,7 +823,7 @@ End Function
 '       * 'arr' is not a 2D array
 '       * column indexes are out of bounds
 '*******************************************************************************
-Public Function GetUniqueRows(arr As Variant, columns_() As Long) As Variant()
+Public Function GetUniqueRows(ByRef arr As Variant, ByRef columns_() As Long) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".GetUniqueRows"
     '
     'Check Input Array
@@ -900,7 +900,7 @@ End Function
 'Raises error:
 '   - 5: if 'iterableList' does not support For Each... Next loop
 '*******************************************************************************
-Public Function GetUniqueValues(iterableList As Variant) As Variant()
+Public Function GetUniqueValues(ByRef iterableList As Variant) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".GetUniqueValues"
     '
     'Check Input
@@ -927,7 +927,7 @@ End Function
 '   - Arrays and User Defined Types (UDTs) are not supported (returns "")
 '   - For other types it distinguishes by adding a trailing value based on type
 '*******************************************************************************
-Private Function GetUniqueTextKey(varValue As Variant) As String
+Private Function GetUniqueTextKey(ByRef varValue As Variant) As String
     Dim obj As IUnknown 'the fundamental interface in COM
     '
     If VBA.IsObject(varValue) Then
@@ -971,8 +971,7 @@ End Function
 '       * array is not two-dimensional
 '       * beforeRow index or rowsCount is invalid
 '*******************************************************************************
-Public Function InsertRowsAtIndex(arr As Variant _
-    , ByVal rowsCount As Long _
+Public Function InsertRowsAtIndex(ByRef arr As Variant, ByVal rowsCount As Long _
     , ByVal beforeRow As Long _
 ) As Variant 'Do not add () as in: ...) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".InsertRowsAtIndex"
@@ -1035,12 +1034,11 @@ End Function
 '       * array is not two-dimensional
 '       * columnIndex/rowsCount/topRowsCount/bottomRowsCount is invalid
 '*******************************************************************************
-Public Function InsertRowsAtValChange(arr As Variant _
+Public Function InsertRowsAtValChange(ByRef arr As Variant _
     , ByVal rowsCount As Long _
     , ByVal columnIndex As Long _
     , Optional ByVal topRowsCount As Long = 0 _
     , Optional ByVal bottomRowsCount As Long = 0 _
-    , Optional ByVal ignoreEmpty As Boolean = False _
 ) As Variant 'Do not add () as in: ...) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".InsertRowsAtValChange"
     '
@@ -1141,8 +1139,7 @@ End Function
 '       * the input array is not 2-dimensional
 '       * the row index is out of bounds
 '*******************************************************************************
-Public Function Is2DArrayRowEmpty(arr As Variant _
-    , ByVal rowIndex As Long _
+Public Function Is2DArrayRowEmpty(ByRef arr As Variant, ByVal rowIndex As Long _
     , Optional ByVal ignoreEmptyStrings As Boolean = False _
 ) As Boolean
     Const fullMethodName As String = MODULE_NAME & ".Is2DArrayRowEmpty"
@@ -1162,12 +1159,13 @@ Public Function Is2DArrayRowEmpty(arr As Variant _
         If VBA.IsObject(arr(rowIndex, j)) Then Exit Function
         v = arr(rowIndex, j)
         Select Case VBA.VarType(v)
-            Case VbVarType.vbEmpty
-                'Continue to next element
-            Case VbVarType.vbString
-                If Not ignoreEmptyStrings Then Exit Function
-                If v <> vbNullString Then Exit Function
-            Case Else: Exit Function
+        Case VbVarType.vbEmpty
+            'Continue to next element
+        Case VbVarType.vbString
+            If Not ignoreEmptyStrings Then Exit Function
+            If v <> vbNullString Then Exit Function
+        Case Else
+            Exit Function
         End Select
     Next j
     '
@@ -1215,8 +1213,7 @@ End Function
 '   - LIKE and NOT LIKE operators only work if the compare value is a text
 '     (pattern) and the target value is one of: bool, number, text
 '*******************************************************************************
-Public Function IsValuePassingFilter(value_ As Variant, filter As FILTER_PAIR _
-) As Boolean
+Public Function IsValuePassingFilter(ByRef value_ As Variant, ByRef filter As FILTER_PAIR) As Boolean
     Const fullMethodName As String = MODULE_NAME & ".IsValuePassingFilter"
     Dim rnk As DATA_TYPE_RANK: rnk = GetDataTypeRank(value_)
     Dim isListOperator As Boolean
@@ -1327,8 +1324,7 @@ End Function
 'Examples:
 '   - arr1 = [1,2] and arr2 = [3,4,5] >> results [1,2,3,4,5]
 '*******************************************************************************
-Public Function Merge1DArrays(arr1 As Variant, arr2 As Variant _
-) As Variant 'Do not add () as in: ...) As Variant()
+Public Function Merge1DArrays(ByRef arr1 As Variant, ByRef arr2 As Variant) As Variant  'Do not add () as in: ...) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".Merge1DArrays"
     '
     'Check Dimensions
@@ -1390,7 +1386,7 @@ End Function
 '   - arr1 = [1,2] and arr2 = [5,6] and verticalMerge = False > results [1,2,5,6]
 '            [3,4]            [7,8]                                     [3,4,7,8]
 '*******************************************************************************
-Public Function Merge2DArrays(arr1 As Variant, arr2 As Variant _
+Public Function Merge2DArrays(ByRef arr1 As Variant, ByRef arr2 As Variant _
     , ByVal verticalMerge As Boolean _
 ) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".Merge2DArrays"
@@ -1468,7 +1464,7 @@ End Function
 '   - arr = [1,2] and traverseType = rowWise >> results [1,2,3,4]
 '           [3,4]
 '*******************************************************************************
-Public Function NDArrayTo1DArray(arr As Variant _
+Public Function NDArrayTo1DArray(ByRef arr As Variant _
     , ByVal traverseType As ARRAY_TRAVERSE_TYPE _
 ) As Variant 'Do not add () as in: ...) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".NDArrayTo1DArray"
@@ -1480,8 +1476,10 @@ Public Function NDArrayTo1DArray(arr As Variant _
     Case 1
         NDArrayTo1DArray = arr
     Case Else
-        If traverseType <> rowWise Then traverseType = columnWise
-        NDArrayTo1DArray = GetArrayDescriptor(arr, traverseType, True).elements1D
+        Dim trType As ARRAY_TRAVERSE_TYPE
+        '
+        If traverseType = rowWise Then trType = rowWise Else trType = columnWise
+        NDArrayTo1DArray = GetArrayDescriptor(arr, trType, True).elements1D
     End Select
 End Function
 
@@ -1492,9 +1490,8 @@ End Function
 '   - traverseType: read array elements in row-wise or column-wise order
 '   - addElements1D: populates the ".elements1D" array for the ARRAY_DESCRIPTOR
 '*******************************************************************************
-Private Function GetArrayDescriptor(arr As Variant _
-    , ByVal traverseType As ARRAY_TRAVERSE_TYPE _
-    , ByVal addElements1D As Boolean _
+Private Function GetArrayDescriptor(ByRef arr As Variant _
+    , ByVal traverseType As ARRAY_TRAVERSE_TYPE, ByVal addElements1D As Boolean _
 ) As ARRAY_DESCRIPTOR
     Dim descStruct As ARRAY_DESCRIPTOR
     Dim i As Long
@@ -1531,9 +1528,7 @@ End Function
 '   - descStruct: the structure to populate
 '   - sourceArray: the multidimensional array containing the elements
 '*******************************************************************************
-Private Sub AddElementsToDescriptor(ByRef descStruct As ARRAY_DESCRIPTOR _
-    , sourceArray As Variant _
-)
+Private Sub AddElementsToDescriptor(ByRef descStruct As ARRAY_DESCRIPTOR, ByRef sourceArray As Variant)
     'Note that zero-length arrays (1 dimension) are covered as well
     If descStruct.dimsCount = 1 Then
         descStruct.elements1D = sourceArray
@@ -1588,7 +1583,7 @@ End Sub
 '     In the initial call must have the value of 1
 '*******************************************************************************
 Private Sub AddRowMajorIndexes(ByRef descStruct As ARRAY_DESCRIPTOR _
-    , currDimension As ARRAY_DIMENSION _
+    , ByRef currDimension As ARRAY_DIMENSION _
     , ByVal colWiseIndex As Long _
     , ByRef rowWiseIndex As Long _
 )
@@ -1619,7 +1614,7 @@ End Sub
 'Mimics the way arrays are stored in other languages (vectors inside vectors)
 '   except that the indexes will start with 1 instead of 0 (VBA Collections)
 '*******************************************************************************
-Public Function NDArrayToCollections(arr As Variant) As Collection
+Public Function NDArrayToCollections(ByRef arr As Variant) As Collection
     Const fullMethodName As String = MODULE_NAME & ".NDArrayToCollections"
     '
     If GetArrayDimsCount(arr) = 0 Then
@@ -1643,9 +1638,8 @@ End Function
 '   - elemIndex: element index implemented as a counter (ByRef).
 '     In the initial call should be the Lower Bound of 'descStruct.elements1D'
 '*******************************************************************************
-Private Function GetCollsFromDescriptor(descStruct As ARRAY_DESCRIPTOR _
-    , currDimension As ARRAY_DIMENSION _
-    , ByRef elemIndex As Long _
+Private Function GetCollsFromDescriptor(ByRef descStruct As ARRAY_DESCRIPTOR _
+    , ByRef currDimension As ARRAY_DIMENSION, ByRef elemIndex As Long _
 ) As Collection
     Dim collResult As New Collection
     Dim i As Long
@@ -1683,8 +1677,7 @@ End Function
 '   - if the total Number of values is not divisible by columnsCount then the
 '     extra values (last row) of the array are by default the value Empty
 '*******************************************************************************
-Public Function OneDArrayTo2DArray(arr As Variant, ByVal columnsCount As Long _
-) As Variant()
+Public Function OneDArrayTo2DArray(ByRef arr As Variant, ByVal columnsCount As Long) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".OneDArrayTo2DArray"
     '
     'Check Input
@@ -1723,7 +1716,7 @@ End Function
 'Raises error:
 '   -  5 if: input array is not 1D
 '*******************************************************************************
-Public Function OneDArrayToCollection(arr As Variant) As Collection
+Public Function OneDArrayToCollection(ByRef arr As Variant) As Collection
     Const fullMethodName As String = MODULE_NAME & ".OneDArrayToCollection"
     '
     'Check Input
@@ -1745,8 +1738,7 @@ End Function
 'Replaces Empty values within an Array
 'Curently supports 1D, 2D and 3D arrays
 '*******************************************************************************
-Public Sub ReplaceEmptyInArray(ByRef arr As Variant, newVal As Variant)
-    Const fullMethodName As String = MODULE_NAME & ".ReplaceEmptyInArray"
+Public Sub ReplaceEmptyInArray(ByRef arr As Variant, ByVal newVal As Variant)
     Dim needsSet As Boolean: needsSet = VBA.IsObject(newVal)
     Dim v As Variant
     Dim i As Long
@@ -1824,8 +1816,7 @@ End Sub
 '   - arr = [1,2,3,4,5,6] and groupSize = 5 >> error 5 is raised
 '   - arr = [1,2,3,4,5,6] and groupSize = 6 >> returns [1,2,3,4,5,6]
 '*******************************************************************************
-Public Function Reverse1DArray(ByRef arr As Variant, Optional ByVal groupSize As Long = 1 _
-) As Variant 'Do not add () as in: ...) As Variant()
+Public Function Reverse1DArray(ByRef arr As Variant, Optional ByVal groupSize As Long = 1) As Variant  'Do not add () as in: ...) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".Reverse1DArray"
     '
     'Check Input
@@ -2082,8 +2073,8 @@ End Function
 '   - arr = [1,2,3,4], startIndex = 0 and length_ = 2 >> results [1,2]
 '   - arr = [1,2,3,4], startIndex = 2 and length_ = 5 >> results [3,4]
 '*******************************************************************************
-Public Function Slice1DArray(arr As Variant _
-    , ByVal startIndex As Long, ByVal length_ As Long _
+Public Function Slice1DArray(ByRef arr As Variant, ByVal startIndex As Long _
+    , ByVal length_ As Long _
 ) As Variant 'Do not add () as in: ...) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".Slice1DArray"
     '
@@ -2139,7 +2130,7 @@ End Function
 '                                                                       [6,7]
 '   - startRow = 1, startColumn = 1, height_ = 2, width_ = 6 >> results [6,7,8]
 '*******************************************************************************
-Public Function Slice2DArray(arr As Variant _
+Public Function Slice2DArray(ByRef arr As Variant _
     , ByVal startRow As Long, ByVal startColumn As Long _
     , ByVal height_ As Long, ByVal width_ As Long _
 ) As Variant 'Do not add () as in: ...) As Variant()
@@ -2312,8 +2303,9 @@ End Function
 '   - https://en.wikipedia.org/wiki/Quicksort
 '*******************************************************************************
 Private Sub QuickSortVector(ByRef vector As Variant _
-    , lowIndex As Long, uppIndex As Long _
-    , cOptions As COMPARE_OPTIONS, arrIndex() As Long, vecType As VECTOR_TYPE _
+    , ByVal lowIndex As Long, ByVal uppIndex As Long _
+    , ByRef cOptions As COMPARE_OPTIONS, ByRef arrIndex() As Long _
+    , ByVal vecType As VECTOR_TYPE _
 )
     If lowIndex >= uppIndex Then Exit Sub
     '
@@ -2378,8 +2370,8 @@ End Sub
 '     Excel sorts ranges of values
 'Utility for the QuickSort methods
 '*******************************************************************************
-Private Function CompareValues(val1 As Variant, val2 As Variant _
-    , cOptions As COMPARE_OPTIONS _
+Private Function CompareValues(ByRef val1 As Variant, ByRef val2 As Variant _
+    , ByRef cOptions As COMPARE_OPTIONS _
 ) As COMPARE_RESULT
     Dim rnk1 As DATA_TYPE_RANK: rnk1 = GetDataTypeRank(val1)
     Dim rnk2 As DATA_TYPE_RANK: rnk2 = GetDataTypeRank(val2)
@@ -2432,7 +2424,7 @@ End Function
 '   of existing data types. This simplification speeds up the comparison of 2
 '   values by removing the need to compare values of incompatible data types
 '*******************************************************************************
-Private Function GetDataTypeRank(varValue As Variant) As DATA_TYPE_RANK
+Private Function GetDataTypeRank(ByRef varValue As Variant) As DATA_TYPE_RANK
     If VBA.IsObject(varValue) Then
         GetDataTypeRank = rankObject
         Exit Function
@@ -2543,8 +2535,8 @@ End Function
 '   - https://en.wikipedia.org/wiki/Quicksort
 '*******************************************************************************
 Private Sub QuickSort2DArray(ByRef arr As Variant _
-    , lowerRow As Long, upperRow As Long, sortColumn As Long _
-    , cOptions As COMPARE_OPTIONS, arrIndex() As Long _
+    , ByVal lowerRow As Long, ByVal upperRow As Long, ByVal sortColumn As Long _
+    , ByRef cOptions As COMPARE_OPTIONS, ByRef arrIndex() As Long _
 )
     If lowerRow >= upperRow Then Exit Sub
     '
@@ -2644,7 +2636,7 @@ End Function
 '*******************************************************************************
 'Swaps 2 values in a 1D Array, in-place
 '*******************************************************************************
-Private Sub Swap1DArrayValues(ByRef arr As Variant, index1 As Long, index2 As Long)
+Private Sub Swap1DArrayValues(ByRef arr As Variant, ByVal index1 As Long, ByVal index2 As Long)
     If index1 <> index2 Then SwapValues arr(index1), arr(index2)
 End Sub
 
@@ -2665,8 +2657,8 @@ Private Sub SwapCollectionValues(ByVal coll As Collection, ByVal index1 As Long,
         i2 = index1
     End If
     '
-    coll.Add Item:=coll(i1), Before:=i2
-    coll.Add Item:=coll(i2 + 1), Before:=i1
+    coll.Add Item:=coll.Item(i1), Before:=i2
+    coll.Add Item:=coll.Item(i2 + 1), Before:=i1
     coll.Remove i1 + 1
     coll.Remove i2 + 1
 End Sub
@@ -2718,7 +2710,7 @@ End Sub
 '   - 1D Arrays are transposed to a 1 column 2D Array
 '   - resulting bounds are reflecting the input bounds
 '*******************************************************************************
-Public Function TransposeArray(arr As Variant) As Variant()
+Public Function TransposeArray(ByRef arr As Variant) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".TransposeArray"
     Dim res() As Variant
     '
@@ -2780,7 +2772,7 @@ End Function
 '   - invalid nestType values are defaulted to nestNone (no nesting)
 '   - uninitialized arrays are ignored
 '*******************************************************************************
-Public Function ValuesToCollection(values As Variant _
+Public Function ValuesToCollection(ByRef values As Variant _
     , ByVal nestType As NESTING_TYPE _
     , ByVal traverseArrType As ARRAY_TRAVERSE_TYPE _
 ) As Collection
@@ -2797,7 +2789,7 @@ End Function
 'Adds all values to the specified target collection, recursively
 'Called from ValuesToCollection
 '*******************************************************************************
-Private Sub AddToCollection(values As Variant, ByVal coll As Collection _
+Private Sub AddToCollection(ByRef values As Variant, ByVal coll As Collection _
     , ByVal nestType As NESTING_TYPE, ByVal traverseType As ARRAY_TRAVERSE_TYPE _
     , ByVal hasSiblings As Boolean, Optional ByVal isRoot As Boolean = False _
 )
@@ -2874,7 +2866,7 @@ End Function
 'Checks if a Variant is of Excel.Range type
 'It compiles for other Applications in addition to Excel (like Word, PowerPoint)
 '*******************************************************************************
-Private Function IsExcelRange(v As Variant) As Boolean
+Private Function IsExcelRange(ByRef v As Variant) As Boolean
     If VBA.TypeName(v) = "Range" Then
         On Error Resume Next
         IsExcelRange = (v.Areas.Count > 0)
