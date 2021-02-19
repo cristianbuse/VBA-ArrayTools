@@ -188,6 +188,14 @@ Private Type COMPARE_VALUE
 End Type
 
 'Struct used for filtering (see Filter2DArray method)
+'*******************************************************************************
+'If used as a parameter in a class method or as a return value of a class method
+'   then make sure to declare the class method as Friend. Otherwise the only
+'   other way to make the code compile is to remove the Option Private Module
+'   from the top of this module. Note that removing Option Private Module would
+'   expose the methods of this module (for example in Excel they can be seen as
+'   custom functions in the Excel interface - which is undesirable as they are
+'   not intended as UDFs)
 Public Type FILTER_PAIR
     cOperator As CONDITION_OPERATOR
     compValue As COMPARE_VALUE
@@ -425,20 +433,16 @@ End Function
 'Utility for 'CreateFilter' method
 '*******************************************************************************
 Private Function CreateTextKeys(ByRef values As Variant) As Collection
-    Dim collResult As New Collection
+    Dim collResult As Collection: Set collResult = New Collection
     Dim key_ As String
+    Dim v As Variant
     '
-    If IsIterable(values) Then
-        Dim v As Variant
-        '
-        For Each v In values
-            key_ = GetUniqueTextKey(v)
-            If key_ <> vbNullString Then collResult.Add Empty, key_
-        Next v
-    Else
-        key_ = GetUniqueTextKey(values)
-        If key_ <> vbNullString Then collResult.Add Empty, key_
-    End If
+    On Error Resume Next 'Ignore duplicates
+    For Each v In values
+        key_ = GetUniqueTextKey(v)
+        If key_ <> vbNullString Then collResult.Add key_, key_
+    Next v
+    On Error GoTo 0
     Set CreateTextKeys = collResult
 End Function
 

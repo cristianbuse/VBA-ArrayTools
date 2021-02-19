@@ -1134,6 +1134,10 @@ Private Function TestCreateFilter() As TEST_RESULT
     AssertIsTrue IsArray(filter.compValue.value_)
     AssertIsTrue filter.compValue.isIterable_
     '
+    filter = LibArrayTools.CreateFilter("IN", Array("A", "B", "C", "A"))
+    AssertIsTrue 0 <> filter.cOperator
+    AssertIsTrue filter.compValue.textKeys_.Count = 3
+    '
     testResult.passed = True
 ExitTest:
     TestCreateFilter = testResult
