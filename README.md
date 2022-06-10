@@ -107,11 +107,11 @@ Public Sub DemoFiltering()
     Dim boolExpression As Boolean
     '
     'Check if a value is passing a filter
-    boolExpression = IsValuePassingFilter(5, CreateFilter(">", 3))               'True
-    boolExpression = IsValuePassingFilter(5, CreateFilter(">", 7))               'False
-    boolExpression = IsValuePassingFilter(5, CreateFilter("IN", Array(1, 3, 5))) 'True
-    boolExpression = IsValuePassingFilter("test", CreateFilter("LIKE", "?es?"))  'True
-    boolExpression = IsValuePassingFilter("c", CreateFilter("LIKE", "[a-d]"))    'True
+    boolExpression = IsValuePassingFilter(5, CreateFilter(opBigger, 3))          'True
+    boolExpression = IsValuePassingFilter(5, CreateFilter(opBigger, 7))          'False
+    boolExpression = IsValuePassingFilter(5, CreateFilter(opin, Array(1, 3, 5))) 'True
+    boolExpression = IsValuePassingFilter("test", CreateFilter(opLike, "?es?"))  'True
+    boolExpression = IsValuePassingFilter("c", CreateFilter(opLike, "[a-d]"))    'True
     '
     'Create array of filters
     filters = CreateFiltersArray(">", 1, "<=", 5, "NOT IN", Array(3, 4))

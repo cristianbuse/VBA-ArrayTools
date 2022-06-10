@@ -163,7 +163,7 @@ Private Type SORT_PIVOT
 End Type
 
 'Available Operators for testing conditions (see FILTER_PAIR struct)
-Private Enum CONDITION_OPERATOR
+Public Enum CONDITION_OPERATOR
     opNone = 0
     [_opMin] = 1
     opEqual = 1
@@ -172,7 +172,7 @@ Private Enum CONDITION_OPERATOR
     opSmallerOrEqual = 4
     opBiggerOrEqual = 5
     opNotEqual = 6
-    opIn = 7
+    opin = 7
     opNotIn = 8
     opLike = 9
     opNotLike = 10
@@ -384,16 +384,16 @@ End Function
 '*******************************************************************************
 'Creates a FILTER_PAIR struct from values
 'Parameters:
-'   - textOperator:
-'       * comparison operators: =, <, >, <=, >=, <>
-'       * inclusion operators: IN , NOT IN
-'       * pattern matching operators: LIKE, NOT LIKE
+'   - cOperator - see CONDITION_OPERATOR enum and GetConditionOperator method
 '   - compareValue: any value
 'Notes:
 '   - see 'GetConditionOperator' for the operator conversion
 '*******************************************************************************
-Public Function CreateFilter(ByVal textOperator As String, ByVal compareValue As Variant) As FILTER_PAIR
-    CreateFilter.cOperator = GetConditionOperator(textOperator)
+Public Function CreateFilter(ByVal cOperator As CONDITION_OPERATOR _
+                           , ByVal compareValue As Variant) As FILTER_PAIR
+    If cOperator >= [_opMin] And cOperator <= [_opMax] Then
+        CreateFilter.cOperator = cOperator
+    End If
     With CreateFilter.compValue
         .rank_ = GetDataTypeRank(compareValue)
         If .rank_ = rankArray Or .rank_ = rankObject Then
@@ -406,37 +406,6 @@ Public Function CreateFilter(ByVal textOperator As String, ByVal compareValue As
             .value_ = compareValue
         End If
     End With
-End Function
-
-'*******************************************************************************
-'Converts a string representation of an operator to it's corresponding Enum
-'A Static Keyed Collection is used for fast retrieval (instead of Select Case)
-'Does not raise errors
-'Utility for 'CreateFilter' method
-'*******************************************************************************
-Private Function GetConditionOperator(ByVal textOperator As String) As CONDITION_OPERATOR
-    Static collOperators As Collection
-    '
-    If collOperators Is Nothing Then
-        Set collOperators = New Collection
-        With collOperators
-            .Add opEqual, "="
-            .Add opSmaller, "<"
-            .Add opBigger, ">"
-            .Add opSmallerOrEqual, "<="
-            .Add opBiggerOrEqual, ">="
-            .Add opNotEqual, "<>"
-            .Add opIn, "IN"
-            .Add opNotIn, "NOT IN"
-            .Add opLike, "LIKE"
-            .Add opNotLike, "NOT LIKE"
-        End With
-    End If
-    '
-    On Error Resume Next
-    GetConditionOperator = collOperators.Item(textOperator)
-    If Err.Number <> 0 Then GetConditionOperator = opNone
-    On Error GoTo 0
 End Function
 
 '*******************************************************************************
@@ -491,20 +460,63 @@ Public Function CreateFiltersArray(ParamArray valuePairs() As Variant) As FILTER
     '
     Dim arr() As FILTER_PAIR: ReDim arr(0 To collFilterPairs.Count / 2 - 1)
     Dim filter As FILTER_PAIR
-    Dim i As Long
+    Dim cOperator As CONDITION_OPERATOR
+    Dim isOperator As Boolean: isOperator = True
+    Dim i As Long: i = 0
     '
-    For i = 1 To collFilterPairs.Count Step 2
-        If VBA.VarType(collFilterPairs(i)) <> vbString Then
-            Err.Raise 5, fullMethodName, "Invalid operator"
+    For Each v In collFilterPairs
+        If isOperator Then
+            cOperator = opNone
+            Select Case VarType(v)
+                Case vbLong: If v >= [_opMin] Or v <= [_opMax] Then cOperator = v
+                Case vbString: cOperator = GetConditionOperator(v)
+            End Select
+            If cOperator = opNone Then
+                Err.Raise 5, fullMethodName, "Invalid operator"
+            End If
+        Else
+            filter = CreateFilter(cOperator, v)
+            arr(i) = filter
+            i = i + 1
         End If
-        filter = CreateFilter(collFilterPairs(i), collFilterPairs(i + 1))
-        If filter.cOperator = opNone Then
-            Err.Raise 5, fullMethodName, "Invalid operator"
-        End If
-        arr((i - 1) / 2) = filter
-    Next i
+        isOperator = Not isOperator
+    Next v
     '
     CreateFiltersArray = arr
+End Function
+
+'*******************************************************************************
+'Converts a string representation of an operator to it's corresponding Enum
+'       * comparison operators: =, <, >, <=, >=, <>
+'       * inclusion operators: IN , NOT IN
+'       * pattern matching operators: LIKE, NOT LIKE
+'A Static Keyed Collection is used for fast retrieval (instead of Select Case)
+'Does not raise errors
+'Utility for 'CreateFiltersArray'
+'*******************************************************************************
+Private Function GetConditionOperator(ByVal textOperator As String) As CONDITION_OPERATOR
+    Static collOperators As Collection
+    '
+    If collOperators Is Nothing Then
+        Set collOperators = New Collection
+        With collOperators
+            .Add opEqual, "="
+            .Add opSmaller, "<"
+            .Add opBigger, ">"
+            .Add opSmallerOrEqual, "<="
+            .Add opBiggerOrEqual, ">="
+            .Add opNotEqual, "<>"
+            .Add opin, "IN"
+            .Add opNotIn, "NOT IN"
+            .Add opLike, "LIKE"
+            .Add opNotLike, "NOT LIKE"
+        End With
+    End If
+    '
+    On Error Resume Next
+    GetConditionOperator = collOperators.Item(textOperator)
+    If Err.Number <> 0 Then GetConditionOperator = opNone
+    On Error GoTo 0
 End Function
 
 '*******************************************************************************
@@ -1233,7 +1245,7 @@ Public Function IsValuePassingFilter(ByRef value_ As Variant, ByRef filter As FI
     Dim rnk As DATA_TYPE_RANK: rnk = GetDataTypeRank(value_)
     Dim isListOperator As Boolean
     '
-    isListOperator = (filter.cOperator = opIn) Or (filter.cOperator = opNotIn)
+    isListOperator = (filter.cOperator = opin) Or (filter.cOperator = opNotIn)
     '
     'Validate input
     If filter.cOperator < [_opMin] Or filter.cOperator > [_opMax] Then
@@ -1268,7 +1280,7 @@ Public Function IsValuePassingFilter(ByRef value_ As Variant, ByRef filter As FI
         Exit Function
     Else
         'Adjust inclusion operators because compare value is not iterable
-        If filter.cOperator = opIn Then filter.cOperator = opEqual
+        If filter.cOperator = opin Then filter.cOperator = opEqual
         If filter.cOperator = opNotIn Then filter.cOperator = opNotEqual
     End If
     '
