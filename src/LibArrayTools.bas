@@ -414,13 +414,13 @@ End Function
 '*******************************************************************************
 Private Function CreateTextKeys(ByRef values As Variant) As Collection
     Dim collResult As Collection: Set collResult = New Collection
-    Dim key_ As String
+    Dim keyValue As String
     Dim v As Variant
     '
     On Error Resume Next 'Ignore duplicates
     For Each v In values
-        key_ = GetUniqueTextKey(v)
-        If key_ <> vbNullString Then collResult.Add key_, key_
+        keyValue = GetUniqueTextKey(v)
+        If LenB(keyValue) > 0 Then collResult.Add keyValue, keyValue
     Next v
     On Error GoTo 0
     Set CreateTextKeys = collResult
@@ -430,10 +430,12 @@ End Function
 'Creates an array of FILTER_PAIR structs from a variant of valuePairs
 'Parameters:
 '   - valuePairs: a ParamArray Variant containing any number of filter pairs:
-'       * textOperator (see 'GetConditionOperator' method):
-'           ~ comparison operators: =, <, >, <=, >=, <>
-'           ~ inclusion operators: IN , NOT IN
-'           ~ pattern matching operators: LIKE, NOT LIKE
+'       * operator:
+'           + textOperator (see 'GetConditionOperator' method):
+'               ~ comparison operators: =, <, >, <=, >=, <>
+'               ~ inclusion operators: IN , NOT IN
+'               ~ pattern matching operators: LIKE, NOT LIKE
+'           + enumOperator (see CONDITION_OPERATOR enum)
 '       * compareValue: any value
 'Raises error:
 '   - 5 if:
@@ -466,16 +468,16 @@ Public Function CreateFiltersArray(ParamArray valuePairs() As Variant) As FILTER
     '
     For Each v In collFilterPairs
         If isOperator Then
-            cOperator = opNone
             Select Case VarType(v)
-                Case vbLong: If v >= [_opMin] Or v <= [_opMax] Then cOperator = v
+                Case vbLong:   cOperator = v
                 Case vbString: cOperator = GetConditionOperator(v)
+                Case Else:     cOperator = opNone
             End Select
-            If cOperator = opNone Then
-                Err.Raise 5, fullMethodName, "Invalid operator"
-            End If
         Else
             filter = CreateFilter(cOperator, v)
+            If filter.cOperator = opNone Then
+                Err.Raise 5, fullMethodName, "Invalid operator"
+            End If
             arr(i) = filter
             i = i + 1
         End If
@@ -879,7 +881,7 @@ Public Function GetUniqueRows(ByRef arr As Variant, ByRef columns_() As Long) As
     On Error Resume Next 'Ignore duplicate rows
     For i = LBound(arr, 1) To UBound(arr, 1)
         rowKey = GetRowKey(arr, i, columns_)
-        If rowKey <> vbNullString Then collRows.Add i, rowKey
+        If LenB(rowKey) > 0 Then collRows.Add i, rowKey
     Next i
     On Error GoTo 0
     '
@@ -908,12 +910,12 @@ End Function
 Private Function GetRowKey(ByRef arr As Variant, ByRef rowIndex As Long, ByRef columns_() As Long) As String
     Dim colIndex As Variant
     Dim rowKey As String
-    Dim key_ As String
+    Dim keyValue As String
     '
     For Each colIndex In columns_
-        key_ = GetUniqueTextKey(arr(rowIndex, colIndex))
-        If key_ = vbNullString Then Exit Function 'Ignore rows with Arrays/UDTs
-        rowKey = rowKey & key_ 'No need for a separator. See GetUniqueTextKey
+        keyValue = GetUniqueTextKey(arr(rowIndex, colIndex))
+        If LenB(keyValue) = 0 Then Exit Function 'Ignore rows with Arrays/UDTs
+        rowKey = rowKey & keyValue 'No need for a separator. See GetUniqueTextKey
     Next colIndex
     GetRowKey = rowKey
 End Function
@@ -937,12 +939,12 @@ Public Function GetUniqueValues(ByRef iterableList As Variant) As Variant()
     '
     Dim v As Variant
     Dim collUnique As New Collection
-    Dim key_ As String
+    Dim keyValue As String
     '
     On Error Resume Next 'For ignoring duplicates
     For Each v In iterableList
-        key_ = GetUniqueTextKey(v) 'Ignores Arrays and UDTs
-        If key_ <> vbNullString Then collUnique.Add v, key_
+        keyValue = GetUniqueTextKey(v) 'Ignores Arrays and UDTs
+        If LenB(keyValue) > 0 Then collUnique.Add v, keyValue
     Next v
     On Error GoTo 0
     GetUniqueValues = CollectionTo1DArray(collUnique)
@@ -1190,7 +1192,7 @@ Public Function Is2DArrayRowEmpty(ByRef arr As Variant, ByVal rowIndex As Long _
             'Continue to next element
         Case VbVarType.vbString
             If Not ignoreEmptyStrings Then Exit Function
-            If v <> vbNullString Then Exit Function
+            If LenB(v) > 0 Then Exit Function
         Case Else
             Exit Function
         End Select
