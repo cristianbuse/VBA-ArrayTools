@@ -279,12 +279,13 @@ End Function
 'Returns a boolean indicating if a Collection has a specific key
 'Parameters:
 '   - coll: a collection to check for key
-'   - key_: the key being searched for
+'   - keyValue: the key being searched for
 'Does not raise errors
 '*******************************************************************************
-Public Function CollectionHasKey(ByVal coll As Collection, ByVal key_ As String) As Boolean
+Public Function CollectionHasKey(ByVal coll As Collection _
+                               , ByVal keyValue As String) As Boolean
     On Error Resume Next
-    coll.Item key_
+    coll.Item keyValue
     CollectionHasKey = (Err.Number = 0)
     On Error GoTo 0
 End Function
@@ -293,10 +294,12 @@ End Function
 'Returns a 1D array based on values contained in the specified collection
 'Parameters:
 '   - coll: collection that contains the values to be used
+'   - [lowBound]: the start index of the array. Default is 0
 'Raises error:
 '   - 91: if Collection Object is not set
 '*******************************************************************************
-Public Function CollectionTo1DArray(ByVal coll As Collection) As Variant()
+Public Function CollectionTo1DArray(ByVal coll As Collection _
+                                  , Optional ByVal lowBound As Long = 0) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".CollectionTo1DArray"
     '
     'Check Input
@@ -307,8 +310,8 @@ Public Function CollectionTo1DArray(ByVal coll As Collection) As Variant()
         Exit Function
     End If
     '
-    Dim res() As Variant: ReDim res(0 To coll.Count - 1)
-    Dim i As Long: i = 0
+    Dim res() As Variant: ReDim res(lowBound To lowBound + coll.Count - 1)
+    Dim i As Long: i = lowBound
     Dim v As Variant
     '
     'Populate array
@@ -325,6 +328,8 @@ End Function
 'Parameters:
 '   - coll: collection that contains the values to be used
 '   - columnsCount: the number of columns that the result 2D array will have
+'   - [lowRow]: the start index of the first array dimension. Default is 0
+'   - [lowCol]: the start index of the second array dimension. Default is 0
 'Raises error:
 '   - 91: if Collection Object is not set
 '   -  5: if the number of columns is less than 1
@@ -338,8 +343,13 @@ End Function
 '                                                      [4]   (4 rows 1 column)
 '   - coll = [1,2,3,4] and columnsCount = 2 >> returns [1,2]
 '                                                      [3,4] (2 rows 2 columns)
+'   - coll = [1,2,3]   and columnsCount = 2 >> returns [1,2]
+'                                                      [3,Empty]
 '*******************************************************************************
-Public Function CollectionTo2DArray(ByVal coll As Collection, ByVal columnsCount As Long) As Variant()
+Public Function CollectionTo2DArray(ByVal coll As Collection _
+                                  , ByVal columnsCount As Long _
+                                  , Optional ByVal lowRow As Long = 0 _
+                                  , Optional ByVal lowCol As Long = 0) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".CollectionTo2DArray"
     '
     'Check Input
@@ -353,7 +363,8 @@ Public Function CollectionTo2DArray(ByVal coll As Collection, ByVal columnsCount
     End If
     '
     Dim rowsCount As Long: rowsCount = -VBA.Int(-coll.Count / columnsCount)
-    Dim arr() As Variant: ReDim arr(0 To rowsCount - 1, 0 To columnsCount - 1)
+    Dim arr() As Variant: ReDim arr(lowRow To lowRow + rowsCount - 1 _
+                                  , lowCol To lowCol + columnsCount - 1)
     Dim i As Long: i = 0
     Dim r As Long
     Dim c As Long
@@ -361,8 +372,8 @@ Public Function CollectionTo2DArray(ByVal coll As Collection, ByVal columnsCount
     '
     'Populate array
     For Each v In coll
-        r = i \ columnsCount
-        c = i Mod columnsCount
+        r = lowRow + i \ columnsCount
+        c = lowCol + i Mod columnsCount
         If VBA.IsObject(v) Then Set arr(r, c) = v Else arr(r, c) = v
         i = i + 1
     Next v
