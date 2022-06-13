@@ -621,17 +621,20 @@ End Function
 '   - arr: a 2D array to be filtered
 '   - byColumn: the index of the column used for filtering
 '   - filters: an array of FILTER_PAIR (operator/compareValue pairs)
+'   - [outLowRow]: start index of the result array's 1st dimension. Default is 0
 'Raises Error:
 '   - 5 if:
 '       * 'arr' is not 2D
 '       * 'filters' is not 1D
 '       * 'byColumn' is out of bounds
 '       * values are incompatible (see 'IsValuePassingFilter' method)
+'Notes:
+'   - column lower bound is preserved (same as the original array)
 '*******************************************************************************
 Public Function Filter2DArray(ByRef arr As Variant _
                             , ByVal byColumn As Long _
                             , ByRef filters() As FILTER_PAIR _
-) As Variant()
+                            , Optional ByVal outLowRow As Long = 0) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".Filter2DArray"
     '
     'Check Input
@@ -671,13 +674,14 @@ Public Function Filter2DArray(ByRef arr As Variant _
     '
     Dim lowCol As Long: lowCol = LBound(arr, 2)
     Dim uppCol As Long: uppCol = UBound(arr, 2)
-    Dim res() As Variant: ReDim res(0 To collRows.Count - 1, lowCol To uppCol)
+    Dim res() As Variant: ReDim res(outLowRow To outLowRow + collRows.Count - 1 _
+                                  , lowCol To uppCol)
     Dim needSet As Boolean
     Dim r As Long
     Dim j As Long
     '
     'Copy rows to the result array
-    i = 0
+    i = outLowRow
     For Each v In collRows
         r = CLng(v)
         For j = lowCol To uppCol

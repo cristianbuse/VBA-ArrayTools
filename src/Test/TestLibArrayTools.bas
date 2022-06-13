@@ -1548,6 +1548,14 @@ Private Function TestFilter2DArray() As TEST_RESULT
                  , vActual:=ArrayToCSV(LibArrayTools.Filter2DArray(arr, 0, filters)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
+    AssertAreEqual vExpected:="[[3,4],[5,6],[7,8]]" _
+                 , vActual:=ArrayToCSV(LibArrayTools.Filter2DArray(arr, 0, filters, 9)) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    AssertAreEqual vExpected:=9 _
+                 , vActual:=LBound(LibArrayTools.Filter2DArray(arr, 0, filters, 9), 1) _
+                 , detailsIfFalse:="Array doesn't have the expected row lower bound"
+    '
     arr = LibArrayTools.Filter2DArray(arr, 0, filters)
     filters = LibArrayTools.CreateFiltersArray("IN", Array(4, 6, 7))
     AssertAreEqual vExpected:="[[3,4],[5,6]]" _
