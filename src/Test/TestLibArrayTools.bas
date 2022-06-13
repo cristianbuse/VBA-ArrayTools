@@ -1922,6 +1922,14 @@ Private Function TestGetUniqueValues() As TEST_RESULT
                  , vActual:=ArrayToCSV(LibArrayTools.GetUniqueValues(arr)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
+    AssertAreEqual vExpected:="[[1,2,3],1,2,Null,3,Empty,"""",True,""2"",""True"",False]" _
+                 , vActual:=ArrayToCSV(LibArrayTools.GetUniqueValues(arr, 4)) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    AssertAreEqual vExpected:=4 _
+                 , vActual:=LBound(LibArrayTools.GetUniqueValues(arr, 4)) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
     testResult.passed = True
 ExitTest:
     TestGetUniqueValues = testResult

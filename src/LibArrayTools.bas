@@ -941,10 +941,12 @@ End Function
 'Parameters:
 '   - iterableList: an array, collection or other object that can be iterated
 '     using a For Each... Next loop
+'   - [outLowBound]: the start index of the result array. Default is 0
 'Raises error:
 '   - 5: if 'iterableList' does not support For Each... Next loop
 '*******************************************************************************
-Public Function GetUniqueValues(ByRef iterableList As Variant) As Variant()
+Public Function GetUniqueValues(ByRef iterableList As Variant _
+                              , Optional ByVal outLowBound As Long = 0) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".GetUniqueValues"
     '
     'Check Input
@@ -962,7 +964,7 @@ Public Function GetUniqueValues(ByRef iterableList As Variant) As Variant()
         If LenB(keyValue) > 0 Then collUnique.Add v, keyValue
     Next v
     On Error GoTo 0
-    GetUniqueValues = CollectionTo1DArray(collUnique)
+    GetUniqueValues = CollectionTo1DArray(collUnique, outLowBound)
 End Function
 
 '*******************************************************************************
