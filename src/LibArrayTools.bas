@@ -328,8 +328,8 @@ End Function
 'Parameters:
 '   - coll: collection that contains the values to be used
 '   - columnsCount: the number of columns that the result 2D array will have
-'   - [lowRow]: the start index of the first array dimension. Default is 0
-'   - [lowCol]: the start index of the second array dimension. Default is 0
+'   - [outLowRow]: the start index of the first array dimension. Default is 0
+'   - [outLowCol]: the start index of the second array dimension. Default is 0
 'Raises error:
 '   - 91: if Collection Object is not set
 '   -  5: if the number of columns is less than 1
@@ -348,8 +348,8 @@ End Function
 '*******************************************************************************
 Public Function CollectionTo2DArray(ByVal coll As Collection _
                                   , ByVal columnsCount As Long _
-                                  , Optional ByVal lowRow As Long = 0 _
-                                  , Optional ByVal lowCol As Long = 0) As Variant()
+                                  , Optional ByVal outLowRow As Long = 0 _
+                                  , Optional ByVal outLowCol As Long = 0) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".CollectionTo2DArray"
     '
     'Check Input
@@ -363,8 +363,8 @@ Public Function CollectionTo2DArray(ByVal coll As Collection _
     End If
     '
     Dim rowsCount As Long: rowsCount = -Int(-coll.Count / columnsCount)
-    Dim arr() As Variant: ReDim arr(lowRow To lowRow + rowsCount - 1 _
-                                  , lowCol To lowCol + columnsCount - 1)
+    Dim arr() As Variant: ReDim arr(outLowRow To outLowRow + rowsCount - 1 _
+                                  , outLowCol To outLowCol + columnsCount - 1)
     Dim i As Long: i = 0
     Dim r As Long
     Dim c As Long
@@ -372,8 +372,8 @@ Public Function CollectionTo2DArray(ByVal coll As Collection _
     '
     'Populate array
     For Each v In coll
-        r = lowRow + i \ columnsCount
-        c = lowCol + i Mod columnsCount
+        r = outLowRow + i \ columnsCount
+        c = outLowCol + i Mod columnsCount
         If IsObject(v) Then Set arr(r, c) = v Else arr(r, c) = v
         i = i + 1
     Next v
@@ -619,17 +619,17 @@ End Function
 'Filters a 2D Array by a specified column
 'Parameters:
 '   - arr: a 2D array to be filtered
-'   - column_: the index of the column used for filtering
+'   - byColumn: the index of the column used for filtering
 '   - filters: an array of FILTER_PAIR (operator/compareValue pairs)
 'Raises Error:
 '   - 5 if:
 '       * 'arr' is not 2D
 '       * 'filters' is not 1D
-'       * 'column_' is out of bounds
+'       * 'byColumn' is out of bounds
 '       * values are incompatible (see 'IsValuePassingFilter' method)
 '*******************************************************************************
 Public Function Filter2DArray(ByRef arr As Variant _
-                            , ByVal column_ As Long _
+                            , ByVal byColumn As Long _
                             , ByRef filters() As FILTER_PAIR _
 ) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".Filter2DArray"
@@ -637,7 +637,7 @@ Public Function Filter2DArray(ByRef arr As Variant _
     'Check Input
     If GetArrayDimsCount(arr) <> 2 Then
         Err.Raise 5, fullMethodName, "Expected 2D Array for filtering"
-    ElseIf column_ < LBound(arr, 2) Or column_ > UBound(arr, 2) Then
+    ElseIf byColumn < LBound(arr, 2) Or byColumn > UBound(arr, 2) Then
         Err.Raise 5, fullMethodName, "Invalid column index"
     ElseIf GetFiltersDimsCount(filters) <> 1 Then
         Err.Raise 5, fullMethodName, "Expected 1D Array of filters"
@@ -659,7 +659,7 @@ Public Function Filter2DArray(ByRef arr As Variant _
     For i = LBound(filters, 1) To UBound(filters, 1)
         filter = filters(i)
         For Each v In collRows
-            If Not IsValuePassingFilter(arr(v, column_), filter) Then
+            If Not IsValuePassingFilter(arr(v, byColumn), filter) Then
                 collRows.Remove CStr(v)
             End If
         Next v
