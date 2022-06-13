@@ -1005,7 +1005,7 @@ End Function
 '*******************************************************************************
 Public Function InsertRowsAtIndex(ByRef arr As Variant _
                                 , ByVal rowsCount As Long _
-                                , ByVal beforeRow As Long) As Variant 'Do not add () as in: ...) As Variant()
+                                , ByVal beforeRow As Long) As Variant
     Const fullMethodName As String = MODULE_NAME & ".InsertRowsAtIndex"
     '
     'Check Input
@@ -1070,7 +1070,7 @@ Public Function InsertRowsAtValChange(ByRef arr As Variant _
                                     , ByVal rowsCount As Long _
                                     , ByVal columnIndex As Long _
                                     , Optional ByVal topRowsCount As Long = 0 _
-                                    , Optional ByVal bottomRowsCount As Long = 0) As Variant  'Do not add () as in: ...) As Variant()
+                                    , Optional ByVal bottomRowsCount As Long = 0) As Variant
     Const fullMethodName As String = MODULE_NAME & ".InsertRowsAtValChange"
     '
     'Check Input
@@ -1141,10 +1141,10 @@ End Function
 '   - [lowerBound]: the base/first index. Default is 0
 'Does not raise errors
 '*******************************************************************************
-Public Function IntegerRange1D(ByVal startValue As Long, ByVal endValue As Long _
-    , Optional ByVal lowerBound As Long = 0 _
-) As Long()
-    Dim diff As Long: diff = endValue - startValue
+Public Function IntegerRange1D(ByVal startValue As Long _
+                             , ByVal endValue As Long _
+                             , Optional ByVal lowerBound As Long = 0) As Long()
+    Dim diff As Long:  diff = endValue - startValue
     Dim arr() As Long: ReDim arr(lowerBound To lowerBound + Math.Abs(diff))
     Dim step_ As Long: step_ = Math.Sgn(diff)
     Dim i As Long
@@ -1170,9 +1170,9 @@ End Function
 '       * the input array is not 2-dimensional
 '       * the row index is out of bounds
 '*******************************************************************************
-Public Function Is2DArrayRowEmpty(ByRef arr As Variant, ByVal rowIndex As Long _
-    , Optional ByVal ignoreEmptyStrings As Boolean = False _
-) As Boolean
+Public Function Is2DArrayRowEmpty(ByRef arr As Variant _
+                                , ByVal rowIndex As Long _
+                                , Optional ByVal ignoreEmptyStrings As Boolean = False) As Boolean
     Const fullMethodName As String = MODULE_NAME & ".Is2DArrayRowEmpty"
     '
     'Check Input
@@ -1244,7 +1244,8 @@ End Function
 '   - LIKE and NOT LIKE operators only work if the compare value is a text
 '     (pattern) and the target value is one of: bool, number, text
 '*******************************************************************************
-Public Function IsValuePassingFilter(ByRef value_ As Variant, ByRef filter As FILTER_PAIR) As Boolean
+Public Function IsValuePassingFilter(ByRef value_ As Variant _
+                                   , ByRef filter As FILTER_PAIR) As Boolean
     Const fullMethodName As String = MODULE_NAME & ".IsValuePassingFilter"
     Dim rnk As DATA_TYPE_RANK: rnk = GetDataTypeRank(value_)
     Dim isListOperator As Boolean
@@ -1355,7 +1356,8 @@ End Function
 'Examples:
 '   - arr1 = [1,2] and arr2 = [3,4,5] >> results [1,2,3,4,5]
 '*******************************************************************************
-Public Function Merge1DArrays(ByRef arr1 As Variant, ByRef arr2 As Variant) As Variant  'Do not add () as in: ...) As Variant()
+Public Function Merge1DArrays(ByRef arr1 As Variant _
+                            , ByRef arr2 As Variant) As Variant
     Const fullMethodName As String = MODULE_NAME & ".Merge1DArrays"
     '
     'Check Dimensions
@@ -1417,9 +1419,9 @@ End Function
 '   - arr1 = [1,2] and arr2 = [5,6] and verticalMerge = False > results [1,2,5,6]
 '            [3,4]            [7,8]                                     [3,4,7,8]
 '*******************************************************************************
-Public Function Merge2DArrays(ByRef arr1 As Variant, ByRef arr2 As Variant _
-    , ByVal verticalMerge As Boolean _
-) As Variant()
+Public Function Merge2DArrays(ByRef arr1 As Variant _
+                            , ByRef arr2 As Variant _
+                            , ByVal verticalMerge As Boolean) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".Merge2DArrays"
     '
     'Check Dimensions
@@ -1496,8 +1498,7 @@ End Function
 '           [3,4]
 '*******************************************************************************
 Public Function NDArrayTo1DArray(ByRef arr As Variant _
-    , ByVal traverseType As ARRAY_TRAVERSE_TYPE _
-) As Variant 'Do not add () as in: ...) As Variant()
+                               , ByVal traverseType As ARRAY_TRAVERSE_TYPE) As Variant
     Const fullMethodName As String = MODULE_NAME & ".NDArrayTo1DArray"
     '
     'Check Array Dimensions
@@ -1522,8 +1523,8 @@ End Function
 '   - addElements1D: populates the ".elements1D" array for the ARRAY_DESCRIPTOR
 '*******************************************************************************
 Private Function GetArrayDescriptor(ByRef arr As Variant _
-    , ByVal traverseType As ARRAY_TRAVERSE_TYPE, ByVal addElements1D As Boolean _
-) As ARRAY_DESCRIPTOR
+                                  , ByVal traverseType As ARRAY_TRAVERSE_TYPE _
+                                  , ByVal addElements1D As Boolean) As ARRAY_DESCRIPTOR
     Dim descStruct As ARRAY_DESCRIPTOR
     Dim i As Long
     '
@@ -1559,7 +1560,8 @@ End Function
 '   - descStruct: the structure to populate
 '   - sourceArray: the multidimensional array containing the elements
 '*******************************************************************************
-Private Sub AddElementsToDescriptor(ByRef descStruct As ARRAY_DESCRIPTOR, ByRef sourceArray As Variant)
+Private Sub AddElementsToDescriptor(ByRef descStruct As ARRAY_DESCRIPTOR _
+                                  , ByRef sourceArray As Variant)
     'Note that zero-length arrays (1 dimension) are covered as well
     If descStruct.dimsCount = 1 Then
         descStruct.elements1D = sourceArray
@@ -1614,10 +1616,9 @@ End Sub
 '     In the initial call must have the value of 1
 '*******************************************************************************
 Private Sub AddRowMajorIndexes(ByRef descStruct As ARRAY_DESCRIPTOR _
-    , ByRef currDimension As ARRAY_DIMENSION _
-    , ByVal colWiseIndex As Long _
-    , ByRef rowWiseIndex As Long _
-)
+                             , ByRef currDimension As ARRAY_DIMENSION _
+                             , ByVal colWiseIndex As Long _
+                             , ByRef rowWiseIndex As Long)
     Dim i As Long
     Dim tempIndex As Long
     '
@@ -1670,8 +1671,8 @@ End Function
 '     In the initial call should be the Lower Bound of 'descStruct.elements1D'
 '*******************************************************************************
 Private Function GetCollsFromDescriptor(ByRef descStruct As ARRAY_DESCRIPTOR _
-    , ByRef currDimension As ARRAY_DIMENSION, ByRef elemIndex As Long _
-) As Collection
+                                      , ByRef currDimension As ARRAY_DIMENSION _
+                                      , ByRef elemIndex As Long) As Collection
     Dim collResult As New Collection
     Dim i As Long
     '
@@ -1708,7 +1709,8 @@ End Function
 '   - if the total Number of values is not divisible by columnsCount then the
 '     extra values (last row) of the array are by default the value Empty
 '*******************************************************************************
-Public Function OneDArrayTo2DArray(ByRef arr As Variant, ByVal columnsCount As Long) As Variant()
+Public Function OneDArrayTo2DArray(ByRef arr As Variant _
+                                 , ByVal columnsCount As Long) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".OneDArrayTo2DArray"
     '
     'Check Input
@@ -1847,7 +1849,8 @@ End Sub
 '   - arr = [1,2,3,4,5,6] and groupSize = 5 >> error 5 is raised
 '   - arr = [1,2,3,4,5,6] and groupSize = 6 >> returns [1,2,3,4,5,6]
 '*******************************************************************************
-Public Function Reverse1DArray(ByRef arr As Variant, Optional ByVal groupSize As Long = 1) As Variant  'Do not add () as in: ...) As Variant()
+Public Function Reverse1DArray(ByRef arr As Variant _
+                             , Optional ByVal groupSize As Long = 1) As Variant
     Const fullMethodName As String = MODULE_NAME & ".Reverse1DArray"
     '
     'Check Input
@@ -1903,9 +1906,8 @@ End Function
 '           [5,6,7,8]                                                [1,2,3,4]
 '*******************************************************************************
 Public Function Reverse2DArray(ByRef arr As Variant _
-    , Optional ByVal groupSize As Long = 1 _
-    , Optional ByVal verticalFlip As Boolean = False _
-) As Variant 'Do not add () as in: ...) As Variant()
+                             , Optional ByVal groupSize As Long = 1 _
+                             , Optional ByVal verticalFlip As Boolean = False) As Variant
     Const fullMethodName As String = MODULE_NAME & ".Reverse2DArray"
     '
     'Check Input
@@ -1967,8 +1969,7 @@ End Function
 '   - coll = [1,2,3,4,5,6] and groupSize = 6 >> returns [1,2,3,4,5,6]
 '*******************************************************************************
 Public Function ReverseCollection(ByVal coll As Collection _
-    , Optional ByVal groupSize As Long = 1 _
-) As Collection
+                                , Optional ByVal groupSize As Long = 1) As Collection
     Const fullMethodName As String = MODULE_NAME & ".ReverseCollection"
     '
     'Check Input
@@ -2012,9 +2013,8 @@ End Function
 '   https://en.wikipedia.org/wiki/Arithmetic_progression
 '*******************************************************************************
 Public Function Sequence1D(ByVal termsCount As Long _
-    , Optional ByVal initialTerm As Double = 1 _
-    , Optional ByVal commonDifference As Double = 1 _
-) As Double()
+                         , Optional ByVal initialTerm As Double = 1 _
+                         , Optional ByVal commonDifference As Double = 1) As Double()
     Const fullMethodName As String = MODULE_NAME & ".Sequence1D"
     If termsCount < 1 Then Err.Raise 5, fullMethodName, "Wrong number of terms"
     '
@@ -2045,10 +2045,9 @@ End Function
 '     extra values (last row) of the array are by default 0 (zero)
 '*******************************************************************************
 Public Function Sequence2D(ByVal termsCount As Long _
-    , Optional ByVal initialTerm As Double = 1 _
-    , Optional ByVal commonDifference As Double = 1 _
-    , Optional ByVal columnsCount As Long = 1 _
-) As Double()
+                         , Optional ByVal initialTerm As Double = 1 _
+                         , Optional ByVal commonDifference As Double = 1 _
+                         , Optional ByVal columnsCount As Long = 1) As Double()
     Const fullMethodName As String = MODULE_NAME & ".Sequence2D"
     If termsCount < 1 Then
         Err.Raise 5, fullMethodName, "Wrong number of terms"
@@ -2104,9 +2103,9 @@ End Function
 '   - arr = [1,2,3,4], startIndex = 0 and length_ = 2 >> results [1,2]
 '   - arr = [1,2,3,4], startIndex = 2 and length_ = 5 >> results [3,4]
 '*******************************************************************************
-Public Function Slice1DArray(ByRef arr As Variant, ByVal startIndex As Long _
-    , ByVal length_ As Long _
-) As Variant 'Do not add () as in: ...) As Variant()
+Public Function Slice1DArray(ByRef arr As Variant _
+                           , ByVal startIndex As Long _
+                           , ByVal length_ As Long) As Variant
     Const fullMethodName As String = MODULE_NAME & ".Slice1DArray"
     '
     'Check Input
@@ -2162,9 +2161,10 @@ End Function
 '   - startRow = 1, startColumn = 1, height_ = 2, width_ = 6 >> results [6,7,8]
 '*******************************************************************************
 Public Function Slice2DArray(ByRef arr As Variant _
-    , ByVal startRow As Long, ByVal startColumn As Long _
-    , ByVal height_ As Long, ByVal width_ As Long _
-) As Variant 'Do not add () as in: ...) As Variant()
+                           , ByVal startRow As Long _
+                           , ByVal startColumn As Long _
+                           , ByVal height_ As Long _
+                           , ByVal width_ As Long) As Variant
     Const fullMethodName As String = MODULE_NAME & ".Slice2DArray"
     '
     'Check Input
@@ -2229,8 +2229,8 @@ End Function
 '   - arr = [1,2,3,4], startIndex = 2 and length_ = 5 >> results [2,3,4]
 '*******************************************************************************
 Public Function SliceCollection(ByVal coll As Collection _
-    , ByVal startIndex As Long, ByVal length_ As Long _
-) As Collection
+                              , ByVal startIndex As Long _
+                              , ByVal length_ As Long) As Collection
     Const fullMethodName As String = MODULE_NAME & ".SliceCollection"
     '
     'Check Input
@@ -2282,10 +2282,9 @@ End Function
 '   - 5: if array is not one-dimensional
 '*******************************************************************************
 Public Function Sort1DArray(ByRef arr As Variant _
-    , Optional ByVal sortAscending As Boolean = True _
-    , Optional ByVal useTextNumberAsNumber As Boolean = True _
-    , Optional ByVal caseSensitive As Boolean = False _
-) As Variant 'Do not add () as in: ...) As Variant()
+                          , Optional ByVal sortAscending As Boolean = True _
+                          , Optional ByVal useTextNumberAsNumber As Boolean = True _
+                          , Optional ByVal caseSensitive As Boolean = False) As Variant
     Const fullMethodName As String = MODULE_NAME & ".Sort1DArray"
     '
     'Check Input
@@ -2334,10 +2333,11 @@ End Function
 '   - https://en.wikipedia.org/wiki/Quicksort
 '*******************************************************************************
 Private Sub QuickSortVector(ByRef vector As Variant _
-    , ByVal lowIndex As Long, ByVal uppIndex As Long _
-    , ByRef cOptions As COMPARE_OPTIONS, ByRef arrIndex() As Long _
-    , ByVal vecType As VECTOR_TYPE _
-)
+                          , ByVal lowIndex As Long _
+                          , ByVal uppIndex As Long _
+                          , ByRef cOptions As COMPARE_OPTIONS _
+                          , ByRef arrIndex() As Long _
+                          , ByVal vecType As VECTOR_TYPE)
     If lowIndex >= uppIndex Then Exit Sub
     '
     Dim p As Long:          p = (lowIndex + uppIndex) \ 2
@@ -2382,7 +2382,9 @@ End Sub
 '*******************************************************************************
 'Set a SORT_PIVOT struct from values
 '*******************************************************************************
-Private Sub SetSortPivot(ByRef sPivot As SORT_PIVOT, ByVal index As Long, ByVal v As Variant)
+Private Sub SetSortPivot(ByRef sPivot As SORT_PIVOT _
+                       , ByVal index As Long _
+                       , ByVal v As Variant)
     sPivot.index = index
     If IsObject(v) Then Set sPivot.value_ = v Else sPivot.value_ = v
 End Sub
@@ -2401,9 +2403,9 @@ End Sub
 '     Excel sorts ranges of values
 'Utility for the QuickSort methods
 '*******************************************************************************
-Private Function CompareValues(ByRef val1 As Variant, ByRef val2 As Variant _
-    , ByRef cOptions As COMPARE_OPTIONS _
-) As COMPARE_RESULT
+Private Function CompareValues(ByRef val1 As Variant _
+                             , ByRef val2 As Variant _
+                             , ByRef cOptions As COMPARE_OPTIONS) As COMPARE_RESULT
     Dim rnk1 As DATA_TYPE_RANK: rnk1 = GetDataTypeRank(val1)
     Dim rnk2 As DATA_TYPE_RANK: rnk2 = GetDataTypeRank(val2)
     '
@@ -2511,10 +2513,9 @@ End Function
 '       * sort column index is out of bounds
 '*******************************************************************************
 Public Function Sort2DArray(ByRef arr As Variant, ByVal sortColumn As Long _
-    , Optional ByVal sortAscending As Boolean = True _
-    , Optional ByVal useTextNumberAsNumber As Boolean = True _
-    , Optional ByVal caseSensitive As Boolean = False _
-) As Variant 'Do not add () as in: ...) As Variant()
+                          , Optional ByVal sortAscending As Boolean = True _
+                          , Optional ByVal useTextNumberAsNumber As Boolean = True _
+                          , Optional ByVal caseSensitive As Boolean = False) As Variant
     Const fullMethodName As String = MODULE_NAME & ".Sort2DArray"
     '
     'Check Input
@@ -2566,9 +2567,11 @@ End Function
 '   - https://en.wikipedia.org/wiki/Quicksort
 '*******************************************************************************
 Private Sub QuickSort2DArray(ByRef arr As Variant _
-    , ByVal lowerRow As Long, ByVal upperRow As Long, ByVal sortColumn As Long _
-    , ByRef cOptions As COMPARE_OPTIONS, ByRef arrIndex() As Long _
-)
+                           , ByVal lowerRow As Long _
+                           , ByVal upperRow As Long _
+                           , ByVal sortColumn As Long _
+                           , ByRef cOptions As COMPARE_OPTIONS _
+                           , ByRef arrIndex() As Long)
     If lowerRow >= upperRow Then Exit Sub
     '
     Dim p As Long:         p = (lowerRow + upperRow) \ 2
@@ -2628,10 +2631,9 @@ End Sub
 '   - 91: if collection is not set
 '*******************************************************************************
 Public Function SortCollection(ByRef coll As Collection _
-    , Optional ByVal sortAscending As Boolean = True _
-    , Optional ByVal useTextNumberAsNumber As Boolean = True _
-    , Optional ByVal caseSensitive As Boolean = False _
-) As Collection
+                             , Optional ByVal sortAscending As Boolean = True _
+                             , Optional ByVal useTextNumberAsNumber As Boolean = True _
+                             , Optional ByVal caseSensitive As Boolean = False) As Collection
     Const fullMethodName As String = MODULE_NAME & ".SortCollection"
     '
     'Check Input
@@ -2667,14 +2669,18 @@ End Function
 '*******************************************************************************
 'Swaps 2 values in a 1D Array, in-place
 '*******************************************************************************
-Private Sub Swap1DArrayValues(ByRef arr As Variant, ByVal index1 As Long, ByVal index2 As Long)
+Private Sub Swap1DArrayValues(ByRef arr As Variant _
+                            , ByVal index1 As Long _
+                            , ByVal index2 As Long)
     If index1 <> index2 Then SwapValues arr(index1), arr(index2)
 End Sub
 
 '*******************************************************************************
 'Swaps 2 values in a Collection, in-place
 '*******************************************************************************
-Private Sub SwapCollectionValues(ByVal coll As Collection, ByVal index1 As Long, ByVal index2 As Long)
+Private Sub SwapCollectionValues(ByVal coll As Collection _
+                               , ByVal index1 As Long _
+                               , ByVal index2 As Long)
     If index1 = index2 Then Exit Sub
     '
     Dim i1 As Long
@@ -2697,7 +2703,9 @@ End Sub
 '*******************************************************************************
 'Swaps 2 columns in a 2D Array, in-place
 '*******************************************************************************
-Private Sub Swap2DArrayColumns(ByRef arr As Variant, ByVal column1 As Long, ByVal column2 As Long)
+Private Sub Swap2DArrayColumns(ByRef arr As Variant _
+                             , ByVal column1 As Long _
+                             , ByVal column2 As Long)
     If column1 <> column2 Then
         Dim i As Long
         '
@@ -2710,7 +2718,9 @@ End Sub
 '*******************************************************************************
 'Swaps 2 rows in a 2D Array, in-place
 '*******************************************************************************
-Private Sub Swap2DArrayRows(ByRef arr As Variant, ByVal row1 As Long, ByVal row2 As Long)
+Private Sub Swap2DArrayRows(ByRef arr As Variant _
+                          , ByVal row1 As Long _
+                          , ByVal row2 As Long)
     If row1 <> row2 Then
         Dim j As Long
         '
@@ -2804,9 +2814,8 @@ End Function
 '   - uninitialized arrays are ignored
 '*******************************************************************************
 Public Function ValuesToCollection(ByRef values As Variant _
-    , ByVal nestType As NESTING_TYPE _
-    , ByVal traverseArrType As ARRAY_TRAVERSE_TYPE _
-) As Collection
+                                 , ByVal nestType As NESTING_TYPE _
+                                 , ByVal traverseArrType As ARRAY_TRAVERSE_TYPE) As Collection
     If traverseArrType <> rowWise Then traverseArrType = columnWise
     If nestType < [_nMin] And nestType > [_nMax] Then nestType = nestNone
     '
@@ -2820,10 +2829,12 @@ End Function
 'Adds all values to the specified target collection, recursively
 'Called from ValuesToCollection
 '*******************************************************************************
-Private Sub AddToCollection(ByRef values As Variant, ByVal coll As Collection _
-    , ByVal nestType As NESTING_TYPE, ByVal traverseType As ARRAY_TRAVERSE_TYPE _
-    , ByVal hasSiblings As Boolean, Optional ByVal isRoot As Boolean = False _
-)
+Private Sub AddToCollection(ByRef values As Variant _
+                          , ByVal coll As Collection _
+                          , ByVal nestType As NESTING_TYPE _
+                          , ByVal traverseType As ARRAY_TRAVERSE_TYPE _
+                          , ByVal hasSiblings As Boolean _
+                          , Optional ByVal isRoot As Boolean = False)
     Dim v As Variant
     Dim hasMultiItems As Boolean
     '
@@ -2874,10 +2885,9 @@ End Sub
 'Utility for 'AddToCollection'
 '*******************************************************************************
 Private Function NeedsNesting(ByVal nestType As NESTING_TYPE _
-    , ByVal hasMultiItems As Boolean _
-    , ByVal hasSiblings As Boolean _
-    , ByVal isRoot As Boolean _
-) As Boolean
+                            , ByVal hasMultiItems As Boolean _
+                            , ByVal hasSiblings As Boolean _
+                            , ByVal isRoot As Boolean) As Boolean
     Select Case nestType
         Case nestAll:            NeedsNesting = Not isRoot
         Case nestMultiItemsOnly: NeedsNesting = (hasMultiItems And hasSiblings)

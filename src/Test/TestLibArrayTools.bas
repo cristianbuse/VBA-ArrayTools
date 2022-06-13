@@ -1718,10 +1718,15 @@ Private Function TestGetUniqueIntegers() As TEST_RESULT
     On Error GoTo ErrorHandler
     '
     Dim arr() As Variant
+    Dim lowBound As Long
     '
     expectedError = NewExpectedError(5)
     LibArrayTools.GetUniqueIntegers 5
     If Not expectedError.wasRaised Then AssertFail "Err not raised. Not iterable"
+    '
+    expectedError = NewExpectedError(9)
+    lowBound = LBound(LibArrayTools.GetUniqueIntegers(Array()))
+    If Not expectedError.wasRaised Then AssertFail "Err not raised. Not initialized"
     '
     arr = Array(1, Empty, 2, 3)
     '
