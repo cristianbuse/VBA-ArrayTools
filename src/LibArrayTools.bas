@@ -2309,7 +2309,7 @@ Public Function SliceCollection(ByVal coll As Collection _
 End Function
 
 '*******************************************************************************
-'Sort a 1D Array
+'Sort a 1D Array, in-place
 'Returns:
 '   - the sorted 1D array
 'Parameters:
@@ -2370,7 +2370,7 @@ Public Function Sort1DArray(ByRef arr As Variant _
 End Function
 
 '*******************************************************************************
-'Sorts a Vector (in place). Could be a 1D Array or a Collection
+'Sorts a Vector, in-place. Could be a 1D Array or a Collection
 'Notes:
 '   - This method is recursive so the initial call must include the lower and
 '     upper bounds of the 1D array
@@ -2537,7 +2537,7 @@ Private Function GetDataTypeRank(ByRef varValue As Variant) As DATA_TYPE_RANK
 End Function
 
 '*******************************************************************************
-'Sort a 2D Array by a particular column
+'Sort a 2D Array by a particular column, in-place
 'Returns:
 '   - the sorted 2D array using the specified column for comparison
 'Parameters:
@@ -2807,7 +2807,7 @@ Public Function TransposeArray(ByRef arr As Variant) As Variant()
     '
     Select Case GetArrayDimsCount(arr)
     Case 1
-        If LBound(arr, 1) > UBound(arr, 1) Then 'Zero-length 1D array
+        If LBound(arr, 1) > UBound(arr, 1) Then
             TransposeArray = ZeroLengthArray()
             Exit Function
         End If
