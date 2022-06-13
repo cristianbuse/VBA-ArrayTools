@@ -2336,6 +2336,35 @@ Private Function TestMerge2DArrays() As TEST_RESULT
                  , vActual:=ArrayToCSV(LibArrayTools.Merge2DArrays(arr1, arr2, True)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
+    Dim temp() As Variant
+    temp = LibArrayTools.Merge2DArrays(arr1, arr2, False, -2, 3)
+    '
+    AssertAreEqual vExpected:="[[1,2,3,4,5,6]]" _
+                 , vActual:=ArrayToCSV(temp) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    AssertAreEqual vExpected:=-2 _
+                 , vActual:=LBound(temp, 1) _
+                 , detailsIfFalse:="Array doesn't have the expected row bound"
+    '
+    AssertAreEqual vExpected:=3 _
+                 , vActual:=LBound(temp, 2) _
+                 , detailsIfFalse:="Array doesn't have the expected column bound"
+    '
+    temp = LibArrayTools.Merge2DArrays(arr1, arr2, True, -2, 3)
+    '
+    AssertAreEqual vExpected:="[[1,2,3],[4,5,6]]" _
+                 , vActual:=ArrayToCSV(temp) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    AssertAreEqual vExpected:=-2 _
+                 , vActual:=LBound(temp, 1) _
+                 , detailsIfFalse:="Array doesn't have the expected row bound"
+    '
+    AssertAreEqual vExpected:=3 _
+                 , vActual:=LBound(temp, 2) _
+                 , detailsIfFalse:="Array doesn't have the expected column bound"
+    '
     testResult.passed = True
 ExitTest:
     TestMerge2DArrays = testResult

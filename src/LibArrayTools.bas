@@ -328,8 +328,8 @@ End Function
 'Parameters:
 '   - coll: collection that contains the values to be used
 '   - columnsCount: the number of columns that the result 2D array will have
-'   - [outLowRow]: the start index of the first array dimension. Default is 0
-'   - [outLowCol]: the start index of the second array dimension. Default is 0
+'   - [outLowRow]: the start index of the result's 1st dimension. Default is 0
+'   - [outLowCol]: the start index of the result's 2nd dimension. Default is 0
 'Raises error:
 '   - 91: if Collection Object is not set
 '   -  5: if the number of columns is less than 1
@@ -1432,6 +1432,8 @@ End Function
 '   - verticalMerge:
 '       * True - arrays are combined vertically i.e. rows are combined
 '       * False - arrays are combined horizontally i.e. columns are combined
+'   - [outLowRow]: the start index of the result's 1st dimension. Default is 0
+'   - [outLowCol]: the start index of the result's 2nd dimension. Default is 0
 'Raises error:
 '   - 5 if:
 '       * any of the two arrays is not 2D
@@ -1446,7 +1448,9 @@ End Function
 '*******************************************************************************
 Public Function Merge2DArrays(ByRef arr1 As Variant _
                             , ByRef arr2 As Variant _
-                            , ByVal verticalMerge As Boolean) As Variant()
+                            , ByVal verticalMerge As Boolean _
+                            , Optional ByVal outLowRow As Long = 0 _
+                            , Optional ByVal outLowCol As Long = 0) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".Merge2DArrays"
     '
     'Check Dimensions
@@ -1476,33 +1480,38 @@ Public Function Merge2DArrays(ByRef arr1 As Variant _
         totalCols = colsCount1 + colsCount2
     End If
     '
-    Dim res() As Variant: ReDim res(0 To totalRows - 1, 0 To totalCols - 1)
+    Dim res() As Variant: ReDim res(outLowRow To outLowRow + totalRows - 1 _
+                                  , outLowCol To outLowCol + totalCols - 1)
     Dim i As Long
     Dim j As Long
     Dim v As Variant
+    Dim r1 As Long: r1 = outLowRow + rowsCount1
     '
     'Copy first array
-    i = 0
-    j = 0
+    i = outLowRow
+    j = outLowCol
     'For Each... loop is faster than using 2 For... Next loops
     For Each v In arr1 'Column-major order
         If IsObject(v) Then Set res(i, j) = v Else res(i, j) = v
         i = i + 1
-        If i = rowsCount1 Then 'Switch to the next column
+        If i = r1 Then 'Switch to the next column
             j = j + 1
-            i = 0
+            i = outLowRow
         End If
     Next v
     '
+    Dim r2 As Long: r2 = outLowRow + totalRows
+    Dim s2 As Long: s2 = r2 - rowsCount2
+    '
     'Copy second array
-    i = totalRows - rowsCount2
-    j = totalCols - colsCount2
+    i = s2
+    j = outLowCol + totalCols - colsCount2
     For Each v In arr2
         If IsObject(v) Then Set res(i, j) = v Else res(i, j) = v
         i = i + 1
-        If i = totalRows Then 'Switch to the next column
+        If i = r2 Then 'Switch to the next column
             j = j + 1
-            i = totalRows - rowsCount2
+            i = s2
         End If
     Next v
     '
