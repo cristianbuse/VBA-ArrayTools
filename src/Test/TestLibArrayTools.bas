@@ -1395,6 +1395,14 @@ Private Function TestFilter1DArray() As TEST_RESULT
                  , vActual:=ArrayToCSV(LibArrayTools.Filter1DArray(arr, filters)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
+    AssertAreEqual vExpected:="[5,7]" _
+                 , vActual:=ArrayToCSV(LibArrayTools.Filter1DArray(arr, filters, -3)) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    AssertAreEqual vExpected:=-3 _
+                 , vActual:=LBound(LibArrayTools.Filter1DArray(arr, filters, -3)) _
+                 , detailsIfFalse:="Array doesn't have the expected lower bound"
+    '
     arr = Array(1, Application, 3)
     filters = LibArrayTools.CreateFiltersArray(Array("<>", Application))
     AssertAreEqual vExpected:="[1,3]" _
