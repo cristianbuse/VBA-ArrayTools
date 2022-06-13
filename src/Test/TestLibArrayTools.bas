@@ -1858,6 +1858,14 @@ Private Function TestGetUniqueRows() As TEST_RESULT
                  , vActual:=ArrayToCSV(LibArrayTools.GetUniqueRows(arr, columns_)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
+    AssertAreEqual vExpected:="[[1,2,3],[1,5,6],[1,2,9],[2,3,3]]" _
+                 , vActual:=ArrayToCSV(LibArrayTools.GetUniqueRows(arr, columns_, -2)) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    AssertAreEqual vExpected:=-2 _
+                 , vActual:=LBound(LibArrayTools.GetUniqueRows(arr, columns_, -2), 1) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
     testResult.passed = True
 ExitTest:
     TestGetUniqueRows = testResult

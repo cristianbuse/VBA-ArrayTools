@@ -854,13 +854,17 @@ End Function
 'Parameters:
 '   - arr: a 2D array
 '   - columns_: an array of one or more column indexes to be used
+'   - [outLowRow]: start index of the result array's 1st dimension. Default is 0
 'Raises error:
 '   - 5:
 '       * 'arr' is not a 2D array
 '       * column indexes are out of bounds
+'Notes:
+'   - column lower bound is preserved (same as the original array)
 '*******************************************************************************
 Public Function GetUniqueRows(ByRef arr As Variant _
-                            , ByRef columns_() As Long) As Variant()
+                            , ByRef columns_() As Long _
+                            , Optional ByVal outLowRow As Long = 0) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".GetUniqueRows"
     '
     'Check Input Array
@@ -893,13 +897,14 @@ Public Function GetUniqueRows(ByRef arr As Variant _
     Next i
     On Error GoTo 0
     '
-    Dim res() As Variant: ReDim res(0 To collRows.Count - 1, lowerCol To upperCol)
+    Dim res() As Variant: ReDim res(outLowRow To outLowRow + collRows.Count - 1 _
+                                  , lowerCol To upperCol)
     Dim j As Long
     Dim r As Long
     Dim needSet As Boolean
     '
     'Copy rows to the result array
-    i = 0
+    i = outLowRow
     For Each v In collRows
         r = CLng(v)
         For j = lowerCol To upperCol
