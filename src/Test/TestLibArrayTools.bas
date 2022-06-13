@@ -2202,6 +2202,14 @@ Private Function TestMerge1DArrays() As TEST_RESULT
                  , vActual:=ArrayToCSV(LibArrayTools.Merge1DArrays(arr1, arr2)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
+    AssertAreEqual vExpected:="[1,2,3,4,5,6]" _
+                 , vActual:=ArrayToCSV(LibArrayTools.Merge1DArrays(arr1, arr2, 5)) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    AssertAreEqual vExpected:=5 _
+                 , vActual:=LBound(LibArrayTools.Merge1DArrays(arr1, arr2, 5)) _
+                 , detailsIfFalse:="Array doesn't have the expected lower bound"
+    '
     arr1 = Array(1)
     arr2 = Array(2, 3)
     '

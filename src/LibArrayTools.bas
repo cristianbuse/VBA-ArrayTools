@@ -294,12 +294,12 @@ End Function
 'Returns a 1D array based on values contained in the specified collection
 'Parameters:
 '   - coll: collection that contains the values to be used
-'   - [lowBound]: the start index of the array. Default is 0
+'   - [lowerBound]: the start index of the array. Default is 0
 'Raises error:
 '   - 91: if Collection Object is not set
 '*******************************************************************************
 Public Function CollectionTo1DArray(ByVal coll As Collection _
-                                  , Optional ByVal lowBound As Long = 0) As Variant()
+                                  , Optional ByVal lowerBound As Long = 0) As Variant()
     Const fullMethodName As String = MODULE_NAME & ".CollectionTo1DArray"
     '
     'Check Input
@@ -310,8 +310,8 @@ Public Function CollectionTo1DArray(ByVal coll As Collection _
         Exit Function
     End If
     '
-    Dim res() As Variant: ReDim res(lowBound To lowBound + coll.Count - 1)
-    Dim i As Long: i = lowBound
+    Dim res() As Variant: ReDim res(lowerBound To lowerBound + coll.Count - 1)
+    Dim i As Long: i = lowerBound
     Dim v As Variant
     '
     'Populate array
@@ -1138,7 +1138,7 @@ End Function
 'Parameters:
 '   - startValue: the first value
 '   - endValue: the last value
-'   - [lowerBound]: the base/first index. Default is 0
+'   - [lowerBound]: the start index of the array. Default is 0
 'Does not raise errors
 '*******************************************************************************
 Public Function IntegerRange1D(ByVal startValue As Long _
@@ -1348,6 +1348,7 @@ End Function
 'Parameters:
 '   - arr1: the first 1D array
 '   - arr2: the second 1D array
+'   - [lowerBound]: the start index of the array. Default is 0
 'Raises error:
 '   - 5 if any of the two arrays is not 1D
 'Note:
@@ -1357,7 +1358,8 @@ End Function
 '   - arr1 = [1,2] and arr2 = [3,4,5] >> results [1,2,3,4,5]
 '*******************************************************************************
 Public Function Merge1DArrays(ByRef arr1 As Variant _
-                            , ByRef arr2 As Variant) As Variant
+                            , ByRef arr2 As Variant _
+                            , Optional ByVal lowerBound As Long = 0) As Variant
     Const fullMethodName As String = MODULE_NAME & ".Merge1DArrays"
     '
     'Check Dimensions
@@ -1370,27 +1372,36 @@ Public Function Merge1DArrays(ByRef arr1 As Variant _
     '
     'Check for zero-length arrays
     If elemCount1 = 0 Then
-        Merge1DArrays = arr2
-        Exit Function
-    ElseIf elemCount2 = 0 Then
-        Merge1DArrays = arr1
-        Exit Function
+        If LBound(arr2) = lowerBound Then
+            Merge1DArrays = arr2
+            Exit Function
+        End If
+    End If
+    If elemCount2 = 0 Then
+        If LBound(arr1) = lowerBound Then
+            Merge1DArrays = arr1
+            Exit Function
+        End If
     End If
     '
     Dim totalCount As Long: totalCount = elemCount1 + elemCount2
-    Dim res() As Variant: ReDim res(0 To totalCount - 1)
+    If totalCount = 0 Then
+        Merge1DArrays = ZeroLengthArray()
+        Exit Function
+    End If
+    '
+    Dim res() As Variant: ReDim res(lowerBound To lowerBound + totalCount - 1)
     Dim i As Long
     Dim v As Variant
     '
     'Copy first array
-    i = 0
+    i = lowerBound
     For Each v In arr1 'Column-major order
         If IsObject(v) Then Set res(i) = v Else res(i) = v
         i = i + 1
     Next v
     '
     'Copy second array
-    i = elemCount1
     For Each v In arr2
         If IsObject(v) Then Set res(i) = v Else res(i) = v
         i = i + 1
