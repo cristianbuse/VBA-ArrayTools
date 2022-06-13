@@ -2127,6 +2127,7 @@ End Function
 '   - arr: a 1D array to slice
 '   - startIndex: the index of the first element to be added to result
 '   - length_: the number of elements to return
+'   - [outLowBound]: the start index of the result array. Default is 0
 'Notes:
 '   - excess length is ignored
 'Raises error:
@@ -2139,7 +2140,8 @@ End Function
 '*******************************************************************************
 Public Function Slice1DArray(ByRef arr As Variant _
                            , ByVal startIndex As Long _
-                           , ByVal length_ As Long) As Variant
+                           , ByVal length_ As Long _
+                           , Optional ByVal outLowBound As Long = 0) As Variant
     Const fullMethodName As String = MODULE_NAME & ".Slice1DArray"
     '
     'Check Input
@@ -2149,7 +2151,10 @@ Public Function Slice1DArray(ByRef arr As Variant _
         Err.Raise 5, fullMethodName, "Invalid startIndex"
     ElseIf length_ <= 0 Then
         Err.Raise 5, fullMethodName, "Invalid slice length"
-    ElseIf startIndex = LBound(arr) And startIndex + length_ > UBound(arr) Then
+    ElseIf startIndex = LBound(arr) _
+       And startIndex + length_ > UBound(arr) _
+       And startIndex = outLowBound _
+    Then
         Slice1DArray = arr
         Exit Function
     End If
@@ -2159,15 +2164,17 @@ Public Function Slice1DArray(ByRef arr As Variant _
     'Ignore excess length
     If endIndex > UBound(arr, 1) Then endIndex = UBound(arr, 1)
     '
-    Dim res() As Variant: ReDim res(0 To endIndex - startIndex)
+    Dim res() As Variant
     Dim i As Long
+    Dim adjust As Long: adjust = outLowBound - startIndex
     '
     'Add elements to result array
+    ReDim res(outLowBound To endIndex + adjust)
     For i = startIndex To endIndex
         If IsObject(arr(i)) Then
-            Set res(i - startIndex) = arr(i)
+            Set res(i + adjust) = arr(i)
         Else
-            res(i - startIndex) = arr(i)
+            res(i + adjust) = arr(i)
         End If
     Next i
     '
@@ -2182,6 +2189,8 @@ End Function
 '   - startColumn: the index of the first column to be added to result
 '   - height_: the number of rows to be returned
 '   - width_: the number of columns to be returned
+'   - [outLowRow]: the start index of the result's 1st dimension. Default is 0
+'   - [outLowCol]: the start index of the result's 2nd dimension. Default is 0
 'Notes:
 '   - excess height or width is ignored
 'Raises error:
@@ -2198,7 +2207,9 @@ Public Function Slice2DArray(ByRef arr As Variant _
                            , ByVal startRow As Long _
                            , ByVal startColumn As Long _
                            , ByVal height_ As Long _
-                           , ByVal width_ As Long) As Variant
+                           , ByVal width_ As Long _
+                           , Optional ByVal outLowRow As Long = 0 _
+                           , Optional ByVal outLowCol As Long = 0) As Variant
     Const fullMethodName As String = MODULE_NAME & ".Slice2DArray"
     '
     'Check Input
@@ -2215,8 +2226,10 @@ Public Function Slice2DArray(ByRef arr As Variant _
     ElseIf startRow = LBound(arr, 1) And startColumn = LBound(arr, 2) Then
         If startRow + height_ > UBound(arr, 1) _
         And startColumn + width_ > UBound(arr, 2) Then
-            Slice2DArray = arr
-            Exit Function
+            If startRow = outLowRow And startColumn = outLowCol Then
+                Slice2DArray = arr
+                Exit Function
+            End If
         End If
     End If
     '
@@ -2230,15 +2243,18 @@ Public Function Slice2DArray(ByRef arr As Variant _
     Dim res() As Variant
     Dim i As Long
     Dim j As Long
+    Dim adjustRow As Long: adjustRow = outLowRow - startRow
+    Dim adjustCol As Long: adjustCol = outLowCol - startColumn
     '
     'Add elements to result array
-    ReDim res(0 To endRow - startRow, 0 To endColumn - startColumn)
+    ReDim res(outLowRow To endRow + adjustRow _
+            , outLowCol To endColumn + adjustCol)
     For i = startRow To endRow
         For j = startColumn To endColumn
             If IsObject(arr(i, j)) Then
-                Set res(i - startRow, j - startColumn) = arr(i, j)
+                Set res(i + adjustRow, j + adjustCol) = arr(i, j)
             Else
-                res(i - startRow, j - startColumn) = arr(i, j)
+                res(i + adjustRow, j + adjustCol) = arr(i, j)
             End If
         Next j
     Next i

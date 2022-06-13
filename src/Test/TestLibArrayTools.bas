@@ -2945,10 +2945,20 @@ Private Function TestSlice1DArray() As TEST_RESULT
                  , vActual:=ArrayToCSV(LibArrayTools.Slice1DArray(arr, 1, 2)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
     '
-    arr = Array(2, 3, 4)
-    AssertAreEqual vExpected:="[2]" _
-                 , vActual:=ArrayToCSV(LibArrayTools.Slice1DArray(arr, 0, 1)) _
+    arr = Array(1, 2, 3, 4)
+    AssertAreEqual vExpected:="[2,3]" _
+                 , vActual:=ArrayToCSV(LibArrayTools.Slice1DArray(arr, 1, 2)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    arr = Array(1, 2, 3, 4)
+    AssertAreEqual vExpected:="[2,3]" _
+                 , vActual:=ArrayToCSV(LibArrayTools.Slice1DArray(arr, 1, 2, -5)) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    arr = Array(2, 3, 4)
+    AssertAreEqual vExpected:=-5 _
+                 , vActual:=LBound(LibArrayTools.Slice1DArray(arr, 0, 1, -5)) _
+                 , detailsIfFalse:="Array doesn't have the expected bound"
     '
     testResult.passed = True
 ExitTest:
@@ -3029,6 +3039,21 @@ Private Function TestSlice2DArray() As TEST_RESULT
     AssertAreEqual vExpected:="[[5],[6],[7],[8]]" _
                  , vActual:=ArrayToCSV(LibArrayTools.Slice2DArray(arr, 4, 0, 9, 3)) _
                  , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    Dim temp As Variant
+    temp = LibArrayTools.Slice2DArray(arr, 4, 0, 9, 3, 99, -99)
+    '
+    AssertAreEqual vExpected:="[[5],[6],[7],[8]]" _
+                 , vActual:=ArrayToCSV(temp) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    AssertAreEqual vExpected:=99 _
+                 , vActual:=LBound(temp, 1) _
+                 , detailsIfFalse:="Array doesn't have the expected row bound"
+    '
+    AssertAreEqual vExpected:=-99 _
+                 , vActual:=LBound(temp, 2) _
+                 , detailsIfFalse:="Array doesn't have the expected column bound"
     '
     testResult.passed = True
 ExitTest:
