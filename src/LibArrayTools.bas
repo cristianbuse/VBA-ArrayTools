@@ -59,6 +59,7 @@ Option Compare Text 'See Like operator in 'IsValuePassingFilter' method
 ''    - FilterCollection (in-place)
 ''    - GetArrayDimsCount
 ''    - GetArrayElemCount
+''    - GetConditionOperator
 ''    - GetUniqueIntegers
 ''    - GetUniqueRows
 ''    - GetUniqueValues
@@ -488,40 +489,6 @@ Public Function CreateFiltersArray(ParamArray valuePairs() As Variant) As FILTER
 End Function
 
 '*******************************************************************************
-'Converts a string representation of an operator to it's corresponding Enum:
-'   * comparison operators: =, <, >, <=, >=, <>
-'   * inclusion operators: IN , NOT IN
-'   * pattern matching operators: LIKE, NOT LIKE
-'A Static Keyed Collection is used for fast retrieval (instead of Select Case)
-'Does not raise errors
-'Utility for 'CreateFiltersArray'
-'*******************************************************************************
-Private Function GetConditionOperator(ByVal textOperator As String) As CONDITION_OPERATOR
-    Static collOperators As Collection
-    '
-    If collOperators Is Nothing Then
-        Set collOperators = New Collection
-        With collOperators
-            .Add opEqual, "="
-            .Add opSmaller, "<"
-            .Add opBigger, ">"
-            .Add opSmallerOrEqual, "<="
-            .Add opBiggerOrEqual, ">="
-            .Add opNotEqual, "<>"
-            .Add opin, "IN"
-            .Add opNotIn, "NOT IN"
-            .Add opLike, "LIKE"
-            .Add opNotLike, "NOT LIKE"
-        End With
-    End If
-    '
-    On Error Resume Next
-    GetConditionOperator = collOperators.Item(textOperator)
-    If Err.Number <> 0 Then GetConditionOperator = opNone
-    On Error GoTo 0
-End Function
-
-'*******************************************************************************
 'Returnes the number of dimensions for an array of FILTER_PAIR UDTs
 'Note that the 'GetArrayDimsCount' method cannot be used because UDTs canot be
 '   assigned to a Variant
@@ -779,6 +746,39 @@ End Function
 Public Function GetArrayElemCount(ByRef arr As Variant) As Long
     On Error Resume Next
     GetArrayElemCount = GetArrayDescriptor(arr, rowWise, False).elemCount
+    On Error GoTo 0
+End Function
+
+'*******************************************************************************
+'Converts a string representation of an operator to it's corresponding Enum:
+'   * comparison operators: =, <, >, <=, >=, <>
+'   * inclusion operators: IN , NOT IN
+'   * pattern matching operators: LIKE, NOT LIKE
+'A Static Keyed Collection is used for fast retrieval (instead of Select Case)
+'Does not raise errors
+'*******************************************************************************
+Public Function GetConditionOperator(ByVal textOperator As String) As CONDITION_OPERATOR
+    Static collOperators As Collection
+    '
+    If collOperators Is Nothing Then
+        Set collOperators = New Collection
+        With collOperators
+            .Add opEqual, "="
+            .Add opSmaller, "<"
+            .Add opBigger, ">"
+            .Add opSmallerOrEqual, "<="
+            .Add opBiggerOrEqual, ">="
+            .Add opNotEqual, "<>"
+            .Add opin, "IN"
+            .Add opNotIn, "NOT IN"
+            .Add opLike, "LIKE"
+            .Add opNotLike, "NOT LIKE"
+        End With
+    End If
+    '
+    On Error Resume Next
+    GetConditionOperator = collOperators.Item(textOperator)
+    If Err.Number <> 0 Then GetConditionOperator = opNone
     On Error GoTo 0
 End Function
 
