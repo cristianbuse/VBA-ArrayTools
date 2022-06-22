@@ -60,6 +60,7 @@ Option Compare Text 'See Like operator in 'IsValuePassingFilter' method
 ''    - GetArrayDimsCount
 ''    - GetArrayElemCount
 ''    - GetConditionOperator
+''    - GetConditionOperatorText
 ''    - GetUniqueIntegers
 ''    - GetUniqueRows
 ''    - GetUniqueValues
@@ -166,8 +167,8 @@ End Type
 'Available Operators for testing conditions (see FILTER_PAIR struct)
 Public Enum CONDITION_OPERATOR
     opNone = 0
-    [_opMin] = 1
     opEqual = 1
+    [_opMin] = 1
     opSmaller = 2
     opBigger = 3
     opSmallerOrEqual = 4
@@ -762,24 +763,43 @@ Public Function GetConditionOperator(ByVal textOperator As String) As CONDITION_
     '
     If collOperators Is Nothing Then
         Set collOperators = New Collection
-        With collOperators
-            .Add opEqual, "="
-            .Add opSmaller, "<"
-            .Add opBigger, ">"
-            .Add opSmallerOrEqual, "<="
-            .Add opBiggerOrEqual, ">="
-            .Add opNotEqual, "<>"
-            .Add opin, "IN"
-            .Add opNotIn, "NOT IN"
-            .Add opLike, "LIKE"
-            .Add opNotLike, "NOT LIKE"
-        End With
+        Dim i As Long
+        For i = [_opMin] To [_opMax]
+            collOperators.Add i, GetConditionOperatorText(i)
+        Next i
     End If
     '
     On Error Resume Next
     GetConditionOperator = collOperators.Item(textOperator)
-    If Err.Number <> 0 Then GetConditionOperator = opNone
     On Error GoTo 0
+End Function
+
+'*******************************************************************************
+'Converts a CONDITION_OPERATOR enum value to it's string representation
+'   * comparison operators: =, <, >, <=, >=, <>
+'   * inclusion operators: IN , NOT IN
+'   * pattern matching operators: LIKE, NOT LIKE
+'*******************************************************************************
+Public Function GetConditionOperatorText(ByVal cOperator As CONDITION_OPERATOR) As String
+    Static arrOperators([_opMin] To [_opMax]) As String
+    Static isSet As Boolean
+    '
+    If Not isSet Then
+        arrOperators(opEqual) = "="
+        arrOperators(opSmaller) = "<"
+        arrOperators(opBigger) = ">"
+        arrOperators(opSmallerOrEqual) = "<="
+        arrOperators(opBiggerOrEqual) = ">="
+        arrOperators(opNotEqual) = "<>"
+        arrOperators(opin) = "IN"
+        arrOperators(opNotIn) = "NOT IN"
+        arrOperators(opLike) = "LIKE"
+        arrOperators(opNotLike) = "NOT LIKE"
+        isSet = True
+    End If
+    '
+    If cOperator < [_opMin] Or cOperator > [_opMax] Then Exit Function
+    GetConditionOperatorText = arrOperators(cOperator)
 End Function
 
 '*******************************************************************************
