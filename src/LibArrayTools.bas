@@ -90,6 +90,7 @@ Option Compare Text 'See Like operator in 'IsValuePassingFilter' method
 ''    - Sort2DArray (in-place)
 ''    - SortCollection (in-place)
 ''    - SwapValues (in-place)
+''    - TextArrayToIndex
 ''    - TransposeArray
 ''    - ValuesToCollection
 
@@ -2812,6 +2813,81 @@ Public Sub SwapValues(ByRef val1 As Variant, ByRef val2 As Variant)
     If needsSet2 Then Set val1 = val2 Else val1 = val2
     If needsSet1 Then Set val2 = temp Else val2 = temp
 End Sub
+
+'*******************************************************************************
+'Returns a Collection where keys are the received list of texts and items
+'   are their corresponding position/index
+'Parameters:
+'   - arrText: a 1D array or a 2D array with 1 column or 1 row of values that
+'              are or can be casted to String
+'   - [ignoreDuplicates]:
+'       * True - any duplicated text is ignored (first found position returned)
+'       * False - error 457 will get raised if duplicate is found
+'Raises error:
+'   - 457: if duplicate is found and 'ignoreDuplicates' is set to 'False'
+'   -  13: if any of the values received cannot be casted to String
+'   -   5: if input is not a 1D array or a single row/column 2D array
+'Example usage:
+'    Dim arrHeaders() As Variant: arrHeaders = headersRange.Value2
+'    Dim headerIndex As Collection: Set headerIndex = TextArrayToIndex(arrHeaders)
+'    Dim v As Variant
+'    Dim h As String
+'    For Each v In requiredHeadersList
+'        If Not CollectionHasKey(headerIndex, v) Then
+'            MsgBox "Missing header: " & v
+'            Exit Sub
+'        End If
+'    Next v
+'    h = "An existing header"
+'    Debug.Print "Position of " & h & " is " & headerIndex(h)
+'*******************************************************************************
+Public Function TextArrayToIndex(ByRef arrText() As Variant _
+                               , Optional ByVal ignoreDuplicates As Boolean = True) As Collection
+    Const fullMethodName As String = MODULE_NAME & ".TextArrayToIndex"
+    '
+    Dim i As Long
+    Dim v As Variant
+    Dim collIndex As New Collection
+    Dim dimsCount As Long: dimsCount = GetArrayDimsCount(arrText)
+    Const errDuplicate As Long = 457
+    '
+    If dimsCount = 2 Then
+        Dim r As Long: r = UBound(arrText, 1) - LBound(arrText, 1) + 1
+        Dim c As Long: c = UBound(arrText, 2) - LBound(arrText, 2) + 1
+        '
+        If r > 1 And c > 1 Then
+            Err.Raise 5, fullMethodName, "Expected row or column of texts"
+        ElseIf r = 1 Then
+            i = LBound(arrText, 2)
+        Else
+            i = LBound(arrText, 1)
+        End If
+    ElseIf dimsCount = 1 Then
+        i = LBound(arrText, 1)
+    Else
+        Err.Raise 5, fullMethodName, "Expected 1D or 2D array of text values"
+    End If
+    '
+    On Error Resume Next
+    For Each v In arrText
+        collIndex.Add i, CStr(v)
+        If Err.Number <> 0 Then
+            If Err.Number = errDuplicate Then
+                If Not ignoreDuplicates Then
+                    On Error GoTo 0
+                    Err.Raise errDuplicate, fullMethodName, "Duplicated text"
+                End If
+            Else
+                On Error GoTo 0
+                Err.Raise 13, fullMethodName, "Type mismatch. Expected text"
+            End If
+        End If
+        i = i + 1
+    Next v
+    On Error GoTo 0
+    '
+    Set TextArrayToIndex = collIndex
+End Function
 
 '*******************************************************************************
 'Transposes a 1D or 2D Array

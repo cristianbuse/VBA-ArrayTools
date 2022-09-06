@@ -110,6 +110,7 @@ Public Sub RunAllTests()
     AddTestResult testResults, TestSort2DArray
     AddTestResult testResults, TestSortCollection
     AddTestResult testResults, TestSwapValues
+    AddTestResult testResults, TestTextArrayToIndex
     AddTestResult testResults, TestTransposeArray
     '
     ShowTestResults testResults, Timer - t
@@ -3521,6 +3522,83 @@ Private Function TestSwapValues() As TEST_RESULT
     testResult.passed = True
 ExitTest:
     TestSwapValues = testResult
+Exit Function
+ErrorHandler:
+    Select Case Err.Number
+    Case ERR_ASSERT_FAILED
+        testResult.failDetails = Err.Description
+    Case expectedError.code_
+        expectedError.wasRaised = True
+        expectedError.code_ = 0
+        Resume Next
+    Case Else
+        testResult.failDetails = "Err: #" & Err.Number & " - " & Err.Description
+    End Select
+    '
+    testResult.passed = False
+    Resume ExitTest
+End Function
+
+'###############################################################################
+'Testing LibArrayTools.TextArrayToIndex
+'###############################################################################
+Private Function TestTextArrayToIndex() As TEST_RESULT
+    Dim testResult As TEST_RESULT: testResult.methodName = "TestTextArrayToIndex"
+    Dim expectedError As EXPECTED_ERROR
+    On Error GoTo ErrorHandler
+    '
+    Dim arr() As Variant
+    Dim coll As Collection
+    '
+    expectedError = NewExpectedError(5)
+    LibArrayTools.TextArrayToIndex arr
+    If Not expectedError.wasRaised Then AssertFail "Err not raised. Not 1D/2D"
+    '
+    expectedError = NewExpectedError(5)
+    arr = LibArrayTools.OneDArrayTo2DArray(Array("a", "b", "c", "d"), 2)
+    LibArrayTools.TextArrayToIndex arr
+    If Not expectedError.wasRaised Then AssertFail "Err not raised. Not row/column"
+    '
+    arr = ZeroLengthArray()
+    AssertAreEqual vExpected:="[]" _
+                 , vActual:=CollectionToCSV(LibArrayTools.TextArrayToIndex(arr)) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    arr = Array("test")
+    AssertAreEqual vExpected:="[0]" _
+                 , vActual:=CollectionToCSV(LibArrayTools.TextArrayToIndex(arr)) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    arr = Array("test", Array())
+    expectedError = NewExpectedError(13)
+    LibArrayTools.TextArrayToIndex arr
+    If Not expectedError.wasRaised Then AssertFail "Err not raised. Not text"
+    '
+    arr = Array("test", "test")
+    expectedError = NewExpectedError(457)
+    LibArrayTools.TextArrayToIndex arr, False
+    If Not expectedError.wasRaised Then AssertFail "Err not raised. Duplicate"
+    '
+    arr = Array("test", "test", "test2")
+    Set coll = LibArrayTools.TextArrayToIndex(arr, True)
+    AssertAreEqual vExpected:="[0,2]" _
+                 , vActual:=CollectionToCSV(coll) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    AssertAreEqual coll("test2"), 2
+    '
+    arr = LibArrayTools.OneDArrayTo2DArray(Array("a", "b", "c", "d"), 1)
+    Set coll = LibArrayTools.TextArrayToIndex(arr)
+    AssertAreEqual coll("a"), 0
+    AssertAreEqual coll("d"), 3
+    '
+    arr = LibArrayTools.OneDArrayTo2DArray(Array("a", "b", "c", "d"), 4)
+    Set coll = LibArrayTools.TextArrayToIndex(arr)
+    AssertAreEqual coll("a"), 0
+    AssertAreEqual coll("d"), 3
+    '
+    testResult.passed = True
+ExitTest:
+    TestTextArrayToIndex = testResult
 Exit Function
 ErrorHandler:
     Select Case Err.Number
