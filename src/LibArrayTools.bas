@@ -187,7 +187,7 @@ Private Type COMPARE_VALUE
     value_ As Variant
     rank_ As DATA_TYPE_RANK
     isIterable_ As Boolean
-    textKeys_ As Collection 'used when value_ is iterable (Array/Collection)
+    textKeys_ As Collection 'used when 'value_' is iterable (Array/Collection)
 End Type
 
 'Struct used for filtering (see Filter2DArray method)
@@ -199,6 +199,7 @@ End Type
 '   expose the methods of this module (for example in Excel they can be seen as
 '   custom functions in the Excel interface - which is undesirable as they are
 '   not intended as UDFs)
+'*******************************************************************************
 Public Type FILTER_PAIR
     cOperator As CONDITION_OPERATOR
     compValue As COMPARE_VALUE
@@ -206,8 +207,8 @@ End Type
 
 'Struct used in ValuesToCollection
 Public Enum NESTING_TYPE
-    [_nMin] = 0
     nestNone = 0
+    [_nMin] = nestNone
     nestMultiItemsOnly = 1
     nestAll = 2
     [_nMax] = 2
@@ -218,8 +219,7 @@ End Enum
 #If Mac Then
     Const vbLongLong As Long = 20 'Apparently missing for x64 on Mac
 #Else
-    #If Win64 Then
-    #Else
+    #If Win64 = 0 Then
         Const vbLongLong As Long = 20
     #End If
 #End If
@@ -286,7 +286,7 @@ End Function
 'Does not raise errors
 '*******************************************************************************
 Public Function CollectionHasKey(ByVal coll As Collection _
-                               , ByVal keyValue As String) As Boolean
+                               , ByRef keyValue As String) As Boolean
     On Error Resume Next
     coll.Item keyValue
     CollectionHasKey = (Err.Number = 0)
@@ -412,7 +412,7 @@ Public Function CreateFilter(ByVal cOperator As CONDITION_OPERATOR _
 End Function
 
 '*******************************************************************************
-'Creates a collection with text keys corresponding to the values passed in
+'Creates a collection with text keys corresponding to the received values.
 'Utility for 'CreateFilter' method
 '*******************************************************************************
 Private Function CreateTextKeys(ByRef values As Variant) As Collection
@@ -467,7 +467,7 @@ Public Function CreateFiltersArray(ParamArray valuePairs() As Variant) As FILTER
     Dim filter As FILTER_PAIR
     Dim cOperator As CONDITION_OPERATOR
     Dim isOperator As Boolean: isOperator = True
-    Dim i As Long: i = 0
+    Dim i As Long:             i = 0
     '
     For Each v In collFilterPairs
         If isOperator Then
@@ -743,7 +743,7 @@ End Function
 
 '*******************************************************************************
 'Returns the Number of elements for an input array
-'Returns 0 if array is uninitialized or input is not an array
+'Returns 0 if array is uninitialized/zero-length or if input is not an array
 '*******************************************************************************
 Public Function GetArrayElemCount(ByRef arr As Variant) As Long
     On Error Resume Next
@@ -754,7 +754,7 @@ End Function
 '*******************************************************************************
 'Converts a string representation of an operator to it's corresponding Enum:
 '   * comparison operators: =, <, >, <=, >=, <>
-'   * inclusion operators: IN , NOT IN
+'   * inclusion operators: IN, NOT IN
 '   * pattern matching operators: LIKE, NOT LIKE
 'A Static Keyed Collection is used for fast retrieval (instead of Select Case)
 'Does not raise errors
@@ -808,7 +808,7 @@ End Function
 '   containing all the unique integer values within specified limits
 'Parameters:
 '   - iterableList: an array, collection or other object that can be iterated
-'     using a For Each... Next loop
+'                   using a For Each... Next loop
 '   - [minValue]: the minimum integer value allowed. Default is -2147483648
 '   - [maxValue]: the maximum integer value allowed. Default is +2147483647
 'Raises error:
@@ -922,15 +922,15 @@ Public Function GetUniqueRows(ByRef arr As Variant _
                                   , lowerCol To upperCol)
     Dim j As Long
     Dim r As Long
-    Dim needSet As Boolean
+    Dim needsSet As Boolean
     '
     'Copy rows to the result array
     i = outLowRow
     For Each v In collRows
         r = CLng(v)
         For j = lowerCol To upperCol
-            needSet = IsObject(arr(r, j))
-            If needSet Then Set res(i, j) = arr(r, j) Else res(i, j) = arr(r, j)
+            needsSet = IsObject(arr(r, j))
+            If needsSet Then Set res(i, j) = arr(r, j) Else res(i, j) = arr(r, j)
         Next j
         i = i + 1
     Next v
@@ -961,7 +961,7 @@ End Function
 '   containing all the unique values
 'Parameters:
 '   - iterableList: an array, collection or other object that can be iterated
-'     using a For Each... Next loop
+'                   using a For Each... Next loop
 '   - [outLowBound]: the start index of the result array. Default is 0
 'Raises error:
 '   - 5: if 'iterableList' does not support For Each... Next loop
@@ -979,7 +979,7 @@ Public Function GetUniqueValues(ByRef iterableList As Variant _
     Dim collUnique As New Collection
     Dim keyValue As String
     '
-    On Error Resume Next 'For ignoring duplicates
+    On Error Resume Next 'Ignore duplicates
     For Each v In iterableList
         keyValue = GetUniqueTextKey(v) 'Ignores Arrays and UDTs
         If LenB(keyValue) > 0 Then collUnique.Add v, keyValue
@@ -994,37 +994,31 @@ End Function
 '   - Arrays and User Defined Types (UDTs) are not supported (returns "")
 '   - For other types it distinguishes by adding a trailing value based on type
 '*******************************************************************************
-Private Function GetUniqueTextKey(ByRef varValue As Variant) As String
+Private Function GetUniqueTextKey(ByRef v As Variant) As String
     Dim obj As IUnknown 'the fundamental interface in COM
     '
-    If IsObject(varValue) Then
-        Set obj = varValue
+    If IsObject(v) Then
+        Set obj = v
         GetUniqueTextKey = ObjPtr(obj)
-    Else
-        Select Case VarType(varValue)
-        Case vbNull
-            GetUniqueTextKey = "Null_0"
-        Case vbEmpty
-            GetUniqueTextKey = "Empty_1"
-        Case vbError
-            GetUniqueTextKey = CStr(varValue) & "_2"
-        Case vbBoolean
-            GetUniqueTextKey = CStr(varValue) & "_3"
-        Case vbString
-            GetUniqueTextKey = CStr(varValue) & "_4"
-        Case vbByte, vbInteger, vbLong, vbLongLong 'Integer
-            GetUniqueTextKey = CStr(varValue) & "_5"
-        Case vbCurrency, vbDecimal, vbDouble, vbSingle 'Decimal-point
-            GetUniqueTextKey = CStr(varValue) & "_5"
-        Case vbDate
-            GetUniqueTextKey = CStr(CDbl(varValue)) & "_5"
-        Case vbArray To vbArray + vbUserDefinedType, vbUserDefinedType
-            GetUniqueTextKey = vbNullString 'Not supported
-        Case vbDataObject
-            Set obj = varValue
-            GetUniqueTextKey = ObjPtr(obj)
-        End Select
+        Exit Function
     End If
+    '
+    Select Case VarType(v)
+    Case vbNull:    GetUniqueTextKey = "Null_0"
+    Case vbEmpty:   GetUniqueTextKey = "Empty_1"
+    Case vbError:   GetUniqueTextKey = CStr(v) & "_2"
+    Case vbBoolean: GetUniqueTextKey = CStr(v) & "_3"
+    Case vbString:  GetUniqueTextKey = CStr(v) & "_4"
+    Case vbDate:    GetUniqueTextKey = CStr(CDbl(v)) & "_5"
+    Case vbByte, vbInteger, vbLong, vbLongLong 'Integer
+        GetUniqueTextKey = CStr(v) & "_5"
+    Case vbCurrency, vbDecimal, vbDouble, vbSingle 'Decimal-point
+        GetUniqueTextKey = CStr(v) & "_5"
+    Case vbDataObject
+        Set obj = v
+        GetUniqueTextKey = ObjPtr(obj)
+    Case Else: Exit Function 'Array/UDT
+    End Select
 End Function
 
 '*******************************************************************************
@@ -1664,11 +1658,11 @@ End Sub
 'Parameters:
 '   - descStruct: the details structure. See ARRAY_DESCRIPTOR custom type
 '   - currDimension: the current dimension that the function is working on.
-'     In the initial call it must be the last dimension (lowest)
+'                    In the initial call it must be the last dimension (lowest)
 '   - colWiseIndex: first element (current dimension) column-major index
-'     In the initial call must have the value of 1
+'                   In the initial call must have the value of 1
 '   - rowWiseIndex: element row-major index implemented as a counter (ByRef)
-'     In the initial call must have the value of 1
+'                   In the initial call must have the value of 1
 '*******************************************************************************
 Private Sub AddRowMajorIndexes(ByRef descStruct As ARRAY_DESCRIPTOR _
                              , ByRef currDimension As ARRAY_DIMENSION _
@@ -1677,15 +1671,13 @@ Private Sub AddRowMajorIndexes(ByRef descStruct As ARRAY_DESCRIPTOR _
     Dim i As Long
     Dim tempIndex As Long
     '
-    If currDimension.index = 1 Then
-        'First dimension (highest). Populate Indexes
+    If currDimension.index = 1 Then 'First dimension (highest). Populate Indexes
         For i = 0 To currDimension.size - 1
             tempIndex = colWiseIndex + i * currDimension.depth
             descStruct.rowMajorIndexes(rowWiseIndex) = tempIndex
             rowWiseIndex = rowWiseIndex + 1
         Next i
-    Else
-        'Pass colWise and rowWise indexes to higher dimensions
+    Else 'Pass colWise and rowWise indexes to higher dimensions
         Dim prevDim As ARRAY_DIMENSION
         '
         prevDim = descStruct.dimensions(currDimension.index - 1)
@@ -1721,9 +1713,9 @@ End Function
 'Parameters:
 '   - descStruct: the descriptor structure
 '   - currDimension: the current dimension that the function is working on.
-'     In the initial call it must be the first dimension (highest)
+'                    In the initial call must be the first dimension (highest)
 '   - elemIndex: element index implemented as a counter (ByRef).
-'     In the initial call should be the Lower Bound of 'descStruct.elements1D'
+'                In the initial call must be LBound of 'descStruct.elements1D'
 '*******************************************************************************
 Private Function GetCollsFromDescriptor(ByRef descStruct As ARRAY_DESCRIPTOR _
                                       , ByRef currDimension As ARRAY_DIMENSION _
@@ -1737,8 +1729,7 @@ Private Function GetCollsFromDescriptor(ByRef descStruct As ARRAY_DESCRIPTOR _
             collResult.Add descStruct.elements1D(elemIndex)
             elemIndex = elemIndex + 1
         Next i
-    Else
-        'Get Collections for lower dimensions
+    Else 'Get Collections for lower dimensions
         Dim nextDim As ARRAY_DIMENSION
         '
         nextDim = descStruct.dimensions(currDimension.index + 1)
@@ -1758,7 +1749,7 @@ End Function
 'Raises error:
 '   -  5 if:
 '       * input array is not 1D
-'       * input array has no elements. Zero-length array (e.g.
+'       * input array has no elements i.e. zero-length array
 '       * the number of columns is less than 1
 'Notes:
 '   - if the total Number of values is not divisible by columnsCount then the
