@@ -86,6 +86,7 @@ Public Sub RunAllTests()
     AddTestResult testResults, TestOneDArrayTo2DArray
     AddTestResult testResults, TestFilter2DArray
     AddTestResult testResults, TestFilterCollection
+    AddTestResult testResults, TestFindTextsRow
     AddTestResult testResults, TestIntegerRange1D
     AddTestResult testResults, TestGetUniqueIntegers
     AddTestResult testResults, TestGetUniqueRows
@@ -1658,6 +1659,98 @@ Private Function TestFilterCollection() As TEST_RESULT
     testResult.passed = True
 ExitTest:
     TestFilterCollection = testResult
+Exit Function
+ErrorHandler:
+    Select Case Err.Number
+    Case ERR_ASSERT_FAILED
+        testResult.failDetails = Err.Description
+    Case expectedError.code_
+        expectedError.wasRaised = True
+        expectedError.code_ = 0
+        Resume Next
+    Case Else
+        testResult.failDetails = "Err: #" & Err.Number & " - " & Err.Description
+    End Select
+    '
+    testResult.passed = False
+    Resume ExitTest
+End Function
+
+'###############################################################################
+'Testing LibArrayTools.FindTextsRow
+'###############################################################################
+Private Function TestFindTextsRow() As TEST_RESULT
+    Dim testResult As TEST_RESULT: testResult.methodName = "TestFindTextsRow"
+    Dim expectedError As EXPECTED_ERROR
+    On Error GoTo ErrorHandler
+    '
+    Dim arr() As Variant
+    '
+    expectedError = NewExpectedError(5)
+    LibArrayTools.FindTextsRow arr, Array()
+    If Not expectedError.wasRaised Then
+        AssertFail "Err not raised. Array not 2D"
+    End If
+    '
+    arr = OneDArrayTo2DArray(Array("AB", "AC", "AD", "AF", "AB", "AC", "AE", "AF", "AB", "AC", "AD", "AE"), 4)
+    '
+    expectedError = NewExpectedError(5)
+    LibArrayTools.FindTextsRow arr, "AB"
+    If Not expectedError.wasRaised Then AssertFail "Err not raised. Not iterable"
+    '
+    AssertAreEqual vExpected:=2 _
+                 , vActual:=LibArrayTools.FindTextsRow(arr, Array("AB", "AB", "AD", "AE")) _
+                 , detailsIfFalse:="Invalid row found"
+    '
+    AssertAreEqual vExpected:=-1 _
+                 , vActual:=LibArrayTools.FindTextsRow(arr, Array("AB", "AB", "AD", "AE"), maxRowsToSearch:=2) _
+                 , detailsIfFalse:="Invalid row found"
+    '
+    AssertAreEqual vExpected:=-1 _
+                 , vActual:=LibArrayTools.FindTextsRow(arr, Array()) _
+                 , detailsIfFalse:="Invalid row found"
+    '
+    expectedError = NewExpectedError(5)
+    LibArrayTools.FindTextsRow arr, Array(Null, 5)
+    If Not expectedError.wasRaised Then AssertFail "Expected text to search for"
+    '
+    AssertAreEqual vExpected:=1 _
+                 , vActual:=LibArrayTools.FindTextsRow(arr, Array("ab", "ae")) _
+                 , detailsIfFalse:="Invalid row found"
+    '
+    AssertAreEqual vExpected:=-1 _
+                 , vActual:=LibArrayTools.FindTextsRow(arr, Array("ab", "ae"), caseSensitive:=True) _
+                 , detailsIfFalse:="Invalid row found"
+    '
+    arr = OneDArrayTo2DArray(Array("ABCD", "EFGH", "IJKL"), 3)
+    '
+    AssertAreEqual vExpected:=-1 _
+                 , vActual:=LibArrayTools.FindTextsRow(arr, Array("abc", "efg", "ijk")) _
+                 , detailsIfFalse:="Invalid row found"
+    '
+    AssertAreEqual vExpected:=0 _
+                 , vActual:=LibArrayTools.FindTextsRow(arr, Array("abc", "efg", "ijk"), maxCharsToMatch:=3) _
+                 , detailsIfFalse:="Invalid row found"
+    '
+    AssertAreEqual vExpected:=0 _
+                 , vActual:=LibArrayTools.FindTextsRow(arr, Array("abm", "efm", "ijm"), maxCharsToMatch:=2) _
+                 , detailsIfFalse:="Invalid row found"
+    '
+    arr = OneDArrayTo2DArray(Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12), 3)
+    '
+    AssertAreEqual vExpected:=-1 _
+                 , vActual:=LibArrayTools.FindTextsRow(arr, Array(1, 2, 3)) _
+                 , detailsIfFalse:="Invalid row found"
+    '
+    arr = OneDArrayTo2DArray(Array("1", "2", "3", "4", "5", "6", "7", "8", "9"), 3)
+    '
+    AssertAreEqual vExpected:=1 _
+                 , vActual:=LibArrayTools.FindTextsRow(arr, Array(4, 5, 6)) _
+                 , detailsIfFalse:="Invalid row found"
+    '
+    testResult.passed = True
+ExitTest:
+    TestFindTextsRow = testResult
 Exit Function
 ErrorHandler:
     Select Case Err.Number

@@ -57,6 +57,7 @@ Option Compare Text 'See Like operator in 'IsValuePassingFilter' method
 ''    - Filter1DArray
 ''    - Filter2DArray
 ''    - FilterCollection (in-place)
+''    - FindTextsRow
 ''    - GetArrayDimsCount
 ''    - GetArrayElemCount
 ''    - GetConditionOperator
@@ -722,6 +723,115 @@ ErrorHandler:
     Err.Raise Err.Number _
             , Err.Source & vbNewLine & fullMethodName _
             , Err.Description & vbNewLine & "Invalid filters or values"
+End Function
+
+'*******************************************************************************
+'Find an array of texts in a source array and return the row index
+'Example usage: finding required table headers
+'Parameters:
+'   - arr: a 2D array to search into
+'   - iterableTexts: an array, collection or other object that can be iterated
+'                      using a For Each... Next loop
+'   - [maxRowsToSearch]: limit the number of rows to search from the top.
+'                        Default is 0 (all rows)
+'   - [maxCharsToMatch]: limit the number of characters to match.
+'                        Default is 0 (all characters)
+'   - [caseSensitive]: * True - compare texts as case-sensitive
+'                      * False - ignore case when comparing texts (default)
+'Notes:
+'   - consider limiting 'maxCharsToMatch' to 255 when searching for Excel list
+'     object headers or formulas as these are limited to 255 characters
+'   - if not all texts are found then this method returns an invalid row index
+'     less than the lower row bound i.e. LBound(arr, 1) - 1
+'Raises Error:
+'   -  5 if:
+'        * 'arr' is not 2D
+'        * any value in 'iterableTexts' is not a String
+'*******************************************************************************
+Public Function FindTextsRow(ByRef arr() As Variant _
+                           , ByRef iterableTexts As Variant _
+                           , Optional ByVal maxRowsToSearch As Long = 0 _
+                           , Optional ByVal maxCharsToMatch As Long = 0 _
+                           , Optional ByVal caseSensitive As Boolean = False) As Long
+    Const fullMethodName As String = MODULE_NAME & ".FindTextsRow"
+    '
+    If GetArrayDimsCount(arr) <> 2 Then
+        Err.Raise 5, fullMethodName, "Expected 2D array source data"
+    ElseIf maxRowsToSearch <= 0 Then 'Search all rows
+        maxRowsToSearch = UBound(arr, 1) - LBound(arr, 1) + 1
+    End If
+    '
+    Dim h As Variant
+    Dim s As String
+    Dim collTexts As New Collection
+    '
+    On Error Resume Next
+    For Each h In iterableTexts
+        s = CStr(h)
+        If Err.Number <> 0 Then
+            On Error GoTo 0
+            Err.Raise 5, fullMethodName, "Expected text values to search for"
+        End If
+        If maxCharsToMatch > 0 Then
+            If Len(s) > maxCharsToMatch Then s = Left$(s, maxCharsToMatch)
+        End If
+        collTexts.Add s, s
+        If Err.Number <> 0 Then Err.Clear 'Ignore duplicates
+    Next h
+    On Error GoTo 0
+    If collTexts.Count = 0 Then GoTo Fail
+    '
+    Dim i As Long
+    Dim j As Long
+    Dim rowsSearched As Long
+    Dim isRowFound As Boolean
+    Dim isColFound As Boolean
+    Dim lowCol As Long: lowCol = LBound(arr, 2)
+    Dim uppCol As Long: uppCol = UBound(arr, 2)
+    Dim cMethod As VbCompareMethod
+    Dim lenH As Long
+    Dim lenS As Long
+    '
+    If caseSensitive Then cMethod = vbBinaryCompare Else cMethod = vbTextCompare
+    For i = LBound(arr, 1) To UBound(arr, 1)
+        isRowFound = True
+        '
+        For Each h In collTexts
+            lenH = Len(h)
+            isColFound = False
+            '
+            For j = lowCol To uppCol
+                If VarType(arr(i, j)) = vbString Then
+                    s = arr(i, j)
+                    lenS = Len(s)
+                    If maxCharsToMatch > 0 Then
+                        If lenH = maxCharsToMatch And lenS > maxCharsToMatch Then
+                            s = Left$(s, maxCharsToMatch)
+                            lenS = maxCharsToMatch
+                        End If
+                    End If
+                    If lenH = lenS Then
+                        isColFound = (StrComp(s, h, cMethod) = 0)
+                        If isColFound Then Exit For
+                    End If
+                End If
+            Next j
+            If Not isColFound Then
+                isRowFound = False
+                Exit For
+            End If
+        Next h
+        '
+        If isRowFound Then
+            FindTextsRow = i
+            Exit Function
+        End If
+        '
+        rowsSearched = rowsSearched + 1
+        If rowsSearched = maxRowsToSearch Then Exit For
+    Next i
+Fail:
+    FindTextsRow = LBound(arr, 1) - 1
 End Function
 
 '*******************************************************************************
