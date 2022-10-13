@@ -77,6 +77,7 @@ Option Compare Text 'See Like operator in 'IsValuePassingFilter' method
 ''    - NDArrayToCollections
 ''    - OneDArrayTo2DArray
 ''    - OneDArrayToCollection
+''    - RemoveEmptyRows (in-place)
 ''    - ReplaceEmptyInArray (in-place)
 ''    - ReplaceNullInArray (in-place)
 ''    - Reverse1DArray (in-place)
@@ -1923,6 +1924,56 @@ Public Function OneDArrayToCollection(ByRef arr As Variant) As Collection
     '
     Set OneDArrayToCollection = coll
 End Function
+
+'*******************************************************************************
+'Removes all empty rows from a 2D Array, in-place
+'Parameters:
+'   - arr: a 2D array
+'   - [ignoreEmptyStrings]:
+'       * True - Empty String values are considered Empty
+'       * False - Empty String values are not considered Empty. Default
+'Raises error:
+'   - 5 if: the input array is not 2-dimensional
+'*******************************************************************************
+Public Sub RemoveEmptyRows(ByRef arr() As Variant _
+                         , Optional ByVal ignoreEmptyStrings As Boolean = False)
+    Const fullMethodName As String = MODULE_NAME & ".RemoveEmptyRows"
+    If GetArrayDimsCount(arr) <> 2 Then
+        Err.Raise 5, fullMethodName, "Expected 2D Array"
+    End If
+    '
+    Dim collRows As New Collection
+    Dim lowRow As Long: lowRow = LBound(arr, 1)
+    Dim uppRow As Long: uppRow = UBound(arr, 1)
+    Dim i As Long
+    '
+    For i = lowRow To uppRow
+        If Not Is2DArrayRowEmpty(arr, i, ignoreEmptyStrings) Then
+            collRows.Add i
+        End If
+    Next i
+    '
+    If collRows.Count = 0 Then
+        arr = ZeroLengthArray()
+    ElseIf collRows.Count <> uppRow - lowRow + 1 Then
+        Dim arrTemp() As Variant
+        Dim v As Variant
+        Dim j As Long
+        Dim lowCol As Long:   lowCol = LBound(arr, 2)
+        Dim uppCol As Long:   uppCol = UBound(arr, 2)
+        Dim rowIndex As Long: rowIndex = lowRow
+        '
+        ReDim arrTemp(lowRow To lowRow + collRows.Count - 1, lowCol To uppCol)
+        For Each v In collRows
+            i = v
+            For j = lowCol To uppCol
+                arrTemp(rowIndex, j) = arr(i, j)
+            Next j
+            rowIndex = rowIndex + 1
+        Next v
+        arr = arrTemp
+    End If
+End Sub
 
 '*******************************************************************************
 'Replaces Empty values within an Array

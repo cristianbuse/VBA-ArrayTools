@@ -97,6 +97,7 @@ Public Sub RunAllTests()
     AddTestResult testResults, TestMerge1DArrays
     AddTestResult testResults, TestMerge2DArrays
     AddTestResult testResults, TestOneDArrayToCollection
+    AddTestResult testResults, TestRemoveEmptyRows
     AddTestResult testResults, TestReplaceEmptyInArray
     AddTestResult testResults, TestReplaceNullInArray
     AddTestResult testResults, TestReverse1DArray
@@ -2513,6 +2514,57 @@ Private Function TestOneDArrayToCollection() As TEST_RESULT
     testResult.passed = True
 ExitTest:
     TestOneDArrayToCollection = testResult
+Exit Function
+ErrorHandler:
+    Select Case Err.Number
+    Case ERR_ASSERT_FAILED
+        testResult.failDetails = Err.Description
+    Case expectedError.code_
+        expectedError.wasRaised = True
+        expectedError.code_ = 0
+        Resume Next
+    Case Else
+        testResult.failDetails = "Err: #" & Err.Number & " - " & Err.Description
+    End Select
+    '
+    testResult.passed = False
+    Resume ExitTest
+End Function
+
+'###############################################################################
+'Testing LibArrayTools.RemoveEmptyRows
+'###############################################################################
+Private Function TestRemoveEmptyRows() As TEST_RESULT
+    Dim testResult As TEST_RESULT: testResult.methodName = "TestReplaceEmptyInArray"
+    Dim expectedError As EXPECTED_ERROR
+    On Error GoTo ErrorHandler
+    '
+    Dim arr() As Variant
+    Dim arr2() As Variant
+    '
+    arr = OneDArrayTo2DArray(Array(1, 2, Empty, 4, Empty, Empty, Empty, Empty, vbNullString, Empty, Empty, Empty), 4)
+    '
+    expectedError = NewExpectedError(5)
+    RemoveEmptyRows arr2
+    If Not expectedError.wasRaised Then AssertFail "Expected 2D Array"
+    '
+    arr2 = arr
+    '
+    LibArrayTools.RemoveEmptyRows arr2
+    AssertAreEqual vExpected:="[[1,2,Empty,4],["""",Empty,Empty,Empty]]" _
+                 , vActual:=ArrayToCSV(arr2) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    arr2 = arr
+    '
+    LibArrayTools.RemoveEmptyRows arr2, True
+    AssertAreEqual vExpected:="[[1,2,Empty,4]]" _
+                 , vActual:=ArrayToCSV(arr2) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    testResult.passed = True
+ExitTest:
+    TestRemoveEmptyRows = testResult
 Exit Function
 ErrorHandler:
     Select Case Err.Number
