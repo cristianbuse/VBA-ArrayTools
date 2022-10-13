@@ -97,6 +97,7 @@ Public Sub RunAllTests()
     AddTestResult testResults, TestMerge2DArrays
     AddTestResult testResults, TestOneDArrayToCollection
     AddTestResult testResults, TestReplaceEmptyInArray
+    AddTestResult testResults, TestReplaceNullInArray
     AddTestResult testResults, TestReverse1DArray
     AddTestResult testResults, TestReverse2DArray
     AddTestResult testResults, TestReverseCollection
@@ -2496,6 +2497,86 @@ Private Function TestReplaceEmptyInArray() As TEST_RESULT
     testResult.passed = True
 ExitTest:
     TestReplaceEmptyInArray = testResult
+Exit Function
+ErrorHandler:
+    Select Case Err.Number
+    Case ERR_ASSERT_FAILED
+        testResult.failDetails = Err.Description
+    Case expectedError.code_
+        expectedError.wasRaised = True
+        expectedError.code_ = 0
+        Resume Next
+    Case Else
+        testResult.failDetails = "Err: #" & Err.Number & " - " & Err.Description
+    End Select
+    '
+    testResult.passed = False
+    Resume ExitTest
+End Function
+
+'###############################################################################
+'Testing LibArrayTools.ReplaceNullInArray
+'###############################################################################
+Private Function TestReplaceNullInArray() As TEST_RESULT
+    Dim testResult As TEST_RESULT: testResult.methodName = "TestReplaceNullInArray"
+    Dim expectedError As EXPECTED_ERROR
+    On Error GoTo ErrorHandler
+    '
+    Dim arr() As Variant
+    '
+    ReplaceNullInArray arr, 0
+    '
+    arr = Array(1, Null, Null, 2, 3, Null)
+    '
+    ReplaceNullInArray arr, 7
+    AssertAreEqual vExpected:="[1,7,7,2,3,7]" _
+                 , vActual:=ArrayToCSV(arr) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    arr = Array(1, Null, Null, 2, 3, Null)
+    '
+    ReplaceNullInArray arr, vbNullString
+    AssertAreEqual vExpected:="[1,"""","""",2,3,""""]" _
+                 , vActual:=ArrayToCSV(arr) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    arr = LibArrayTools.OneDArrayTo2DArray(Array(1, Null, Null, 2, 3, Null), 2)
+    '
+    ReplaceNullInArray arr, " "
+    AssertAreEqual vExpected:="[[1,"" ""],["" "",2],[3,"" ""]]" _
+                 , vActual:=ArrayToCSV(arr) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    arr = LibArrayTools.OneDArrayTo2DArray(Array(1, Null, Null, 2, 3, Null), 3)
+    '
+    ReplaceNullInArray arr, 0
+    AssertAreEqual vExpected:="[[1,0,0],[2,3,0]]" _
+                 , vActual:=ArrayToCSV(arr) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    arr = ZeroLengthArray()
+    '
+    ReplaceNullInArray arr, 0
+    AssertAreEqual vExpected:="[]" _
+                 , vActual:=ArrayToCSV(arr) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    Dim arr3D(1 To 2, 1 To 3, 1 To 1) As Variant
+    arr3D(1, 1, 1) = 0
+    arr3D(1, 2, 1) = 0
+    arr3D(1, 3, 1) = Null
+    arr3D(2, 1, 1) = Null
+    arr3D(2, 2, 1) = 0
+    arr3D(2, 3, 1) = Null
+    '
+    ReplaceNullInArray arr3D, 5
+    AssertAreEqual vExpected:="[[[0],[0],[5]],[[5],[0],[5]]]" _
+                 , vActual:=ArrayToCSV(arr3D) _
+                 , detailsIfFalse:="Array doesn't have the expected elements"
+    '
+    testResult.passed = True
+ExitTest:
+    TestReplaceNullInArray = testResult
 Exit Function
 ErrorHandler:
     Select Case Err.Number

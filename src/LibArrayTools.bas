@@ -77,6 +77,7 @@ Option Compare Text 'See Like operator in 'IsValuePassingFilter' method
 ''    - OneDArrayTo2DArray
 ''    - OneDArrayToCollection
 ''    - ReplaceEmptyInArray (in-place)
+''    - ReplaceNullInArray (in-place)
 ''    - Reverse1DArray (in-place)
 ''    - Reverse2DArray (in-place)
 ''    - ReverseCollection (in-place)
@@ -1857,6 +1858,64 @@ Public Sub ReplaceEmptyInArray(ByRef arr As Variant, ByVal newVal As Variant)
             For j = LBound(arr, 2) To UBound(arr, 2)
                 For k = LBound(arr, 3) To UBound(arr, 3)
                     If IsEmpty(arr(i, j, k)) Then
+                        If needsSet Then
+                            Set arr(i, j, k) = newVal
+                        Else
+                            arr(i, j, k) = newVal
+                        End If
+                    End If
+                Next k
+            Next j
+        Next i
+    Case Else
+        'Add logic as needed (e.g. for 4 dimensions)
+    End Select
+End Sub
+
+'*******************************************************************************
+'Replaces Null values within an Array
+'Curently supports 1D, 2D and 3D arrays
+'*******************************************************************************
+Public Sub ReplaceNullInArray(ByRef arr As Variant, ByVal newVal As Variant)
+    Dim needsSet As Boolean: needsSet = IsObject(newVal)
+    Dim v As Variant
+    Dim i As Long
+    '
+    Select Case GetArrayDimsCount(arr)
+    Case 1
+        i = LBound(arr, 1)
+        For Each v In arr
+            If IsNull(v) Then
+                If needsSet Then Set arr(i) = newVal Else arr(i) = newVal
+            End If
+            i = i + 1
+        Next v
+    Case 2
+        Dim lowerRow As Long: lowerRow = LBound(arr, 1)
+        Dim upperRow As Long: upperRow = UBound(arr, 1)
+        Dim j As Long
+        '
+        i = lowerRow
+        j = LBound(arr, 2)
+        'For Each... Next loop is faster than using 2 For... Next loops
+        For Each v In arr 'Column-major order
+            If IsNull(v) Then
+                If needsSet Then Set arr(i, j) = newVal Else arr(i, j) = newVal
+            End If
+            If i = upperRow Then 'Switch to the next column
+                j = j + 1
+                i = lowerRow
+            Else
+                i = i + 1
+            End If
+        Next v
+    Case 3
+        Dim k As Long
+        '
+        For i = LBound(arr, 1) To UBound(arr, 1)
+            For j = LBound(arr, 2) To UBound(arr, 2)
+                For k = LBound(arr, 3) To UBound(arr, 3)
+                    If IsNull(arr(i, j, k)) Then
                         If needsSet Then
                             Set arr(i, j, k) = newVal
                         Else
