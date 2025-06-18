@@ -1146,17 +1146,17 @@ Private Function TestCreateFilter() As TEST_RESULT
     
     filter = LibArrayTools.CreateFilter(-55, Null)
     AssertAreEqual 0, filter.cOperator
-    AssertIsTrue IsNull(filter.compValue.value_)
-    AssertIsFalse filter.compValue.isIterable_
+    AssertIsTrue IsNull(filter.compValue.Value)
+    AssertIsFalse filter.compValue.IsIterable
     '
     filter = LibArrayTools.CreateFilter(opEqual, ZeroLengthArray())
     AssertIsTrue 0 <> filter.cOperator
-    AssertIsTrue IsArray(filter.compValue.value_)
-    AssertIsTrue filter.compValue.isIterable_
+    AssertIsTrue IsArray(filter.compValue.Value)
+    AssertIsTrue filter.compValue.IsIterable
     '
-    filter = LibArrayTools.CreateFilter(opin, Array("A", "B", "C", "A"))
+    filter = LibArrayTools.CreateFilter(opIn, Array("A", "B", "C", "A"))
     AssertIsTrue 0 <> filter.cOperator
-    AssertIsTrue filter.compValue.textKeys_.Count = 3
+    AssertIsTrue filter.compValue.Keys.Count = 3
     '
     testResult.passed = True
 ExitTest:
@@ -1205,7 +1205,7 @@ Private Function TestIsValuePassingFilter() As TEST_RESULT
     End If
     '
     Dim arr() As Variant
-    filter = LibArrayTools.CreateFilter(opin, arr)
+    filter = LibArrayTools.CreateFilter(opIn, arr)
     '
     expectedError = NewExpectedError(5)
     LibArrayTools.IsValuePassingFilter 2, filter
@@ -1255,7 +1255,7 @@ Private Function TestIsValuePassingFilter() As TEST_RESULT
     coll.Add 5
     coll.Add "test"
     '
-    filter = LibArrayTools.CreateFilter(opin, coll)
+    filter = LibArrayTools.CreateFilter(opIn, coll)
     AssertIsTrue LibArrayTools.IsValuePassingFilter(5, filter)
     '
     filter = LibArrayTools.CreateFilter(opNotIn, coll)
@@ -1264,7 +1264,7 @@ Private Function TestIsValuePassingFilter() As TEST_RESULT
     filter = LibArrayTools.CreateFilter(opNotIn, coll)
     AssertIsTrue LibArrayTools.IsValuePassingFilter("test2", filter)
     '
-    filter = LibArrayTools.CreateFilter(opin, "test")
+    filter = LibArrayTools.CreateFilter(opIn, "test")
     AssertIsTrue LibArrayTools.IsValuePassingFilter("test", filter)
     '
     filter = LibArrayTools.CreateFilter(opNotIn, "test")
@@ -1284,13 +1284,13 @@ Private Function TestIsValuePassingFilter() As TEST_RESULT
     '
     Dim coll2 As New Collection
     '
-    filter = LibArrayTools.CreateFilter(opin, coll2)
+    filter = LibArrayTools.CreateFilter(opIn, coll2)
     AssertIsFalse LibArrayTools.IsValuePassingFilter("test", filter)
     '
-    filter = LibArrayTools.CreateFilter(opin, Array(1, 2, 3))
+    filter = LibArrayTools.CreateFilter(opIn, Array(1, 2, 3))
     AssertIsFalse LibArrayTools.IsValuePassingFilter("test", filter)
     '
-    filter = LibArrayTools.CreateFilter(opin, Array(1, 2, Null, 4))
+    filter = LibArrayTools.CreateFilter(opIn, Array(1, 2, Null, 4))
     AssertIsTrue LibArrayTools.IsValuePassingFilter(Null, filter)
     '
     testResult.passed = True
@@ -1350,8 +1350,8 @@ Private Function TestCreateFiltersArray() As TEST_RESULT
     Dim arr() As FILTER_PAIR
     arr = LibArrayTools.CreateFiltersArray(opBigger, 3, "<=", 9, "NOT IN", Array(5, 7))
     AssertAreEqual 3, UBound(arr) - LBound(arr) + 1, "Different elements count"
-    AssertAreEqual 2, arr(UBound(arr)).compValue.textKeys_.Count, "Unique keys"
-    AssertIsTrue arr(UBound(arr)).compValue.isIterable_, "Array should be iterable"
+    AssertAreEqual 2, arr(UBound(arr)).compValue.Keys.Count, "Unique keys"
+    AssertIsTrue arr(UBound(arr)).compValue.IsIterable, "Array should be iterable"
     '
     testResult.passed = True
 ExitTest:
