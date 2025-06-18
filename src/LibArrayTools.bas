@@ -115,7 +115,7 @@ End Enum
 
 'Custom Structure to describe an array Dimension
 Private Type ARRAY_DIMENSION
-    index As Long 'the ordinal of the dimension 1-1st, 2-2nd ...
+    Index As Long 'the ordinal of the dimension 1-1st, 2-2nd ...
     size As Long  'the number of elements in the dimension
     depth As Long 'the product of lower dimension (higher index) sizes
 End Type
@@ -164,33 +164,33 @@ End Type
 
 'Struct used for storing a quick sort pivot's value and corresponding index
 Private Type SORT_PIVOT
-    index As Long
-    value_ As Variant
+    Index As Long
+    Value As Variant
 End Type
 
 'Available Operators for testing conditions (see FILTER_PAIR struct)
 Public Enum CONDITION_OPERATOR
     opNone = 0
     opEqual = 1
-    [_opMin] = 1
+    [_opMin] = opEqual
     opSmaller = 2
     opBigger = 3
     opSmallerOrEqual = 4
     opBiggerOrEqual = 5
     opNotEqual = 6
-    opin = 7
+    opIn = 7
     opNotIn = 8
     opLike = 9
     opNotLike = 10
-    [_opMax] = 10
+    [_opMax] = opNotLike
 End Enum
 
 'Struct used for filtering (see FILTER_PAIR struct)
 Private Type COMPARE_VALUE
-    value_ As Variant
-    rank_ As DATA_TYPE_RANK
-    isIterable_ As Boolean
-    textKeys_ As Collection 'used when 'value_' is iterable (Array/Collection)
+    Value As Variant
+    Rank As DATA_TYPE_RANK
+    IsIterable As Boolean
+    Keys As Collection 'used when 'Value' is iterable (Array/Collection)
 End Type
 
 'Struct used for filtering (see Filter2DArray method)
@@ -248,9 +248,9 @@ End Type
 #If Mac Then
 #Else
     #If VBA7 Then
-        Private Declare PtrSafe Function SafeArrayCreate Lib "OleAut32.dll" (ByVal vt As Integer, ByVal cDims As Long, ByRef rgsabound As SAFEARRAYBOUND) As LongPtr
-        Private Declare PtrSafe Function VariantCopy Lib "OleAut32.dll" (pvargDest As Any, pvargSrc As Any) As Long
-        Private Declare PtrSafe Function SafeArrayDestroy Lib "OleAut32.dll" (ByVal psa As LongPtr) As Long
+        Private Declare PtrSafe Function SafeArrayCreate Lib "oleaut32.dll" (ByVal vt As Integer, ByVal cDims As Long, ByRef rgsabound As SAFEARRAYBOUND) As LongPtr
+        Private Declare PtrSafe Function VariantCopy Lib "oleaut32.dll" (pvargDest As Any, pvargSrc As Any) As Long
+        Private Declare PtrSafe Function SafeArrayDestroy Lib "oleaut32.dll" (ByVal psa As LongPtr) As Long
     #Else
         Private Declare Function SafeArrayCreate Lib "OleAut32.dll" (ByVal vt As Integer, ByVal cDims As Long, ByRef rgsabound As SAFEARRAYBOUND) As Long
         Private Declare Function VariantCopy Lib "OleAut32.dll" (pvargDest As Variant, pvargSrc As Any) As Long
@@ -396,20 +396,20 @@ End Function
 '   - see 'GetConditionOperator' for the operator conversion
 '*******************************************************************************
 Public Function CreateFilter(ByVal cOperator As CONDITION_OPERATOR _
-                           , ByVal compareValue As Variant) As FILTER_PAIR
+                           , ByRef compareValue As Variant) As FILTER_PAIR
     If cOperator >= [_opMin] And cOperator <= [_opMax] Then
         CreateFilter.cOperator = cOperator
     End If
     With CreateFilter.compValue
-        .rank_ = GetDataTypeRank(compareValue)
-        If .rank_ = rankArray Or .rank_ = rankObject Then
-            .isIterable_ = IsIterable(compareValue)
-            If .isIterable_ Then Set .textKeys_ = CreateTextKeys(compareValue)
+        .Rank = GetDataTypeRank(compareValue)
+        If .Rank = rankArray Or .Rank = rankObject Then
+            .IsIterable = IsIterable(compareValue)
+            If .IsIterable Then Set .Keys = CreateTextKeys(compareValue)
         End If
-        If .rank_ = rankObject Then
-            Set .value_ = compareValue
+        If .Rank = rankObject Then
+            Set .Value = compareValue
         Else
-            .value_ = compareValue
+            .Value = compareValue
         End If
     End With
 End Function
@@ -871,7 +871,7 @@ End Function
 'A Static Keyed Collection is used for fast retrieval (instead of Select Case)
 'Does not raise errors
 '*******************************************************************************
-Public Function GetConditionOperator(ByVal textOperator As String) As CONDITION_OPERATOR
+Public Function GetConditionOperator(ByRef textOperator As Variant) As CONDITION_OPERATOR
     Static collOperators As Collection
     '
     If collOperators Is Nothing Then
@@ -904,7 +904,7 @@ Public Function GetConditionOperatorText(ByVal cOperator As CONDITION_OPERATOR) 
         arrOperators(opSmallerOrEqual) = "<="
         arrOperators(opBiggerOrEqual) = ">="
         arrOperators(opNotEqual) = "<>"
-        arrOperators(opin) = "IN"
+        arrOperators(opIn) = "IN"
         arrOperators(opNotIn) = "NOT IN"
         arrOperators(opLike) = "LIKE"
         arrOperators(opNotLike) = "NOT LIKE"
@@ -1369,7 +1369,7 @@ End Function
 '*******************************************************************************
 'Returns a boolean indicating if a value passes a filter
 'Parameters:
-'   - value_: the target value to check against the filter
+'   - Value: the target value to check against the filter
 '   - filter: a FILTER_PAIR struct (operator and compare value)
 'Raises error:
 '   - 5 if:
@@ -1385,25 +1385,25 @@ End Function
 '   - LIKE and NOT LIKE operators only work if the compare value is a text
 '     (pattern) and the target value is one of: bool, number, text
 '*******************************************************************************
-Public Function IsValuePassingFilter(ByRef value_ As Variant _
+Public Function IsValuePassingFilter(ByRef Value As Variant _
                                    , ByRef filter As FILTER_PAIR) As Boolean
     Const fullMethodName As String = MODULE_NAME & ".IsValuePassingFilter"
-    Dim rnk As DATA_TYPE_RANK: rnk = GetDataTypeRank(value_)
+    Dim rnk As DATA_TYPE_RANK: rnk = GetDataTypeRank(Value)
     Dim isListOperator As Boolean
     '
-    isListOperator = (filter.cOperator = opin) Or (filter.cOperator = opNotIn)
+    isListOperator = (filter.cOperator = opIn) Or (filter.cOperator = opNotIn)
     '
     'Validate input
     If filter.cOperator < [_opMin] Or filter.cOperator > [_opMax] Then
         Err.Raise 5, fullMethodName, "Invalid Filter Operator"
-    ElseIf rnk = rankUDT Or filter.compValue.rank_ = rankUDT Then
+    ElseIf rnk = rankUDT Or filter.compValue.Rank = rankUDT Then
         Err.Raise 5, fullMethodName, "User Defined Types not supported"
     ElseIf rnk = rankArray Then
         IsValuePassingFilter = (filter.cOperator = opNotIn) _
                             Or (filter.cOperator = opNotEqual)
         Exit Function
-    ElseIf filter.compValue.rank_ = rankArray Then
-        If filter.compValue.isIterable_ Then
+    ElseIf filter.compValue.Rank = rankArray Then
+        If filter.compValue.IsIterable Then
             If Not isListOperator Then
                 Err.Raise 5, fullMethodName, "Incompatible filter"
             End If
@@ -1414,55 +1414,56 @@ Public Function IsValuePassingFilter(ByRef value_ As Variant _
     '
     'Treat Empty as Null String by adjusting ranks
     If rnk = rankEmpty Then rnk = rankText
-    If filter.compValue.rank_ = rankEmpty Then filter.compValue.rank_ = rankText
+    If filter.compValue.Rank = rankEmpty Then filter.compValue.Rank = rankText
     '
     'Check for list inclusion
-    If isListOperator And filter.compValue.isIterable_ Then
+    If isListOperator And filter.compValue.IsIterable Then
         Dim isIncluded As Boolean
-        Dim textKey As String: textKey = GetUniqueTextKey(value_)
+        Dim textKey As String: textKey = GetUniqueTextKey(Value)
         '
-        isIncluded = CollectionHasKey(filter.compValue.textKeys_, textKey)
+        isIncluded = CollectionHasKey(filter.compValue.Keys, textKey)
         IsValuePassingFilter = isIncluded Xor (filter.cOperator = opNotIn)
         Exit Function
     Else
         'Adjust inclusion operators because compare value is not iterable
-        If filter.cOperator = opin Then filter.cOperator = opEqual
+        If filter.cOperator = opIn Then filter.cOperator = opEqual
         If filter.cOperator = opNotIn Then filter.cOperator = opNotEqual
     End If
     '
     'Check target value against filter
     Select Case filter.cOperator
     Case opSmaller, opBigger, opSmallerOrEqual, opBiggerOrEqual
-        If rnk <> filter.compValue.rank_ Then Exit Function
+        If rnk <> filter.compValue.Rank Then Exit Function
         If rnk < rankBoolean Then Exit Function
         '
         Select Case filter.cOperator
         Case opSmaller
-            IsValuePassingFilter = (value_ < filter.compValue.value_)
+            IsValuePassingFilter = (Value < filter.compValue.Value)
         Case opBigger
-            IsValuePassingFilter = (value_ > filter.compValue.value_)
+            IsValuePassingFilter = (Value > filter.compValue.Value)
         Case opSmallerOrEqual
-            IsValuePassingFilter = (value_ <= filter.compValue.value_)
+            IsValuePassingFilter = (Value <= filter.compValue.Value)
         Case opBiggerOrEqual
-            IsValuePassingFilter = (value_ >= filter.compValue.value_)
+            IsValuePassingFilter = (Value >= filter.compValue.Value)
         End Select
         '
         'Force False < True. In VBA: False > True (0 > -1)
         If rnk = rankBoolean Then
             Dim areDifferent As Boolean
-            areDifferent = (value_ <> filter.compValue.value_)
+            areDifferent = (Value <> filter.compValue.Value)
             IsValuePassingFilter = IsValuePassingFilter Xor areDifferent
         End If
     Case opLike, opNotLike
-        If filter.compValue.rank_ <> rankText Then Exit Function 'Text Pattern
+        If filter.compValue.Rank <> rankText Then Exit Function 'Text Pattern
         If rnk < rankBoolean Then Exit Function
         '
         'The 'Like' operator uses Option Compare Text (see top of the module)
-        Dim isLike As Boolean: isLike = (value_ Like filter.compValue.value_)
+        Dim isLike As Boolean: isLike = (Value Like filter.compValue.Value)
         IsValuePassingFilter = isLike Xor (filter.cOperator = opNotLike)
     Case opEqual, opNotEqual
-        If rnk <> filter.compValue.rank_ Then
-            IsValuePassingFilter = (filter.cOperator = opNotEqual)
+        If rnk <> filter.compValue.Rank Then
+            If filter.cOperator = opEqual Then Exit Function
+            IsValuePassingFilter = Not filter.compValue.IsIterable
             Exit Function
         End If
         '
@@ -1471,11 +1472,11 @@ Public Function IsValuePassingFilter(ByRef value_ As Variant _
         If rnk = rankNull Then
             areEqual = True
         ElseIf rnk = rankObject Then
-            Dim key1 As String: key1 = GetUniqueTextKey(value_)
-            Dim key2 As String: key2 = GetUniqueTextKey(filter.compValue.value_)
+            Dim key1 As String: key1 = GetUniqueTextKey(Value)
+            Dim key2 As String: key2 = GetUniqueTextKey(filter.compValue.Value)
             areEqual = (key1 = key2)
         Else
-            areEqual = (value_ = filter.compValue.value_)
+            areEqual = (Value = filter.compValue.Value)
         End If
         '
         IsValuePassingFilter = areEqual Xor (filter.cOperator = opNotEqual)
@@ -1702,7 +1703,7 @@ Private Function GetArrayDescriptor(ByRef arr As Variant _
     '   total count of elements in the entire array
     For i = descStruct.dimsCount To 1 Step -1
         With descStruct.dimensions(i)
-            .index = i
+            .Index = i
             .depth = descStruct.elemCount
             .size = UBound(arr, i) - LBound(arr, i) + 1
             descStruct.elemCount = descStruct.elemCount * .size
@@ -1783,7 +1784,7 @@ Private Sub AddRowMajorIndexes(ByRef descStruct As ARRAY_DESCRIPTOR _
     Dim i As Long
     Dim tempIndex As Long
     '
-    If currDimension.index = 1 Then 'First dimension (highest). Populate Indexes
+    If currDimension.Index = 1 Then 'First dimension (highest). Populate Indexes
         For i = 0 To currDimension.size - 1
             tempIndex = colWiseIndex + i * currDimension.depth
             descStruct.rowMajorIndexes(rowWiseIndex) = tempIndex
@@ -1792,7 +1793,7 @@ Private Sub AddRowMajorIndexes(ByRef descStruct As ARRAY_DESCRIPTOR _
     Else 'Pass colWise and rowWise indexes to higher dimensions
         Dim prevDim As ARRAY_DIMENSION
         '
-        prevDim = descStruct.dimensions(currDimension.index - 1)
+        prevDim = descStruct.dimensions(currDimension.Index - 1)
         For i = 0 To currDimension.size - 1
             tempIndex = colWiseIndex + i * currDimension.depth
             AddRowMajorIndexes descStruct, prevDim, tempIndex, rowWiseIndex
@@ -1835,7 +1836,7 @@ Private Function GetCollsFromDescriptor(ByRef descStruct As ARRAY_DESCRIPTOR _
     Dim collResult As New Collection
     Dim i As Long
     '
-    If currDimension.index = descStruct.dimsCount Then
+    If currDimension.Index = descStruct.dimsCount Then
         'Last dimension (lowest). Populate Elements
         For i = 1 To currDimension.size
             collResult.Add descStruct.elements1D(elemIndex)
@@ -1844,7 +1845,7 @@ Private Function GetCollsFromDescriptor(ByRef descStruct As ARRAY_DESCRIPTOR _
     Else 'Get Collections for lower dimensions
         Dim nextDim As ARRAY_DIMENSION
         '
-        nextDim = descStruct.dimensions(currDimension.index + 1)
+        nextDim = descStruct.dimensions(currDimension.Index + 1)
         For i = 1 To currDimension.size
             collResult.Add GetCollsFromDescriptor(descStruct, nextDim, elemIndex)
         Next i
@@ -2037,7 +2038,7 @@ End Sub
 'Replaces Null values within an Array
 'Curently supports 1D, 2D and 3D arrays
 '*******************************************************************************
-Public Sub ReplaceNullInArray(ByRef arr As Variant, ByVal newVal As Variant)
+Public Sub ReplaceNullInArray(ByRef arr As Variant, ByRef newVal As Variant)
     Dim needsSet As Boolean: needsSet = IsObject(newVal)
     Dim v As Variant
     Dim i As Long
@@ -2631,16 +2632,16 @@ Private Sub QuickSortVector(ByRef vector As Variant _
     Do While newLoIndex <= newUpIndex
         'Increase 'newLoIndex' until a swap is needed
         Do While newLoIndex < uppIndex
-            cr = CompareValues(vector(newLoIndex), piv.value_, cOptions)
+            cr = CompareValues(vector(newLoIndex), piv.Value, cOptions)
             If cr.mustSwap Then Exit Do
-            If cr.areEqual Then If arrIndex(newLoIndex) >= piv.index Then Exit Do
+            If cr.areEqual Then If arrIndex(newLoIndex) >= piv.Index Then Exit Do
             newLoIndex = newLoIndex + 1
         Loop
         'Decrease 'newUpIndex' until a swap is needed
         Do While newUpIndex > lowIndex
-            cr = CompareValues(piv.value_, vector(newUpIndex), cOptions)
+            cr = CompareValues(piv.Value, vector(newUpIndex), cOptions)
             If cr.mustSwap Then Exit Do
-            If cr.areEqual Then If piv.index >= arrIndex(newUpIndex) Then Exit Do
+            If cr.areEqual Then If piv.Index >= arrIndex(newUpIndex) Then Exit Do
             newUpIndex = newUpIndex - 1
         Loop
         'Swap values, if needed
@@ -2665,10 +2666,10 @@ End Sub
 'Set a SORT_PIVOT struct from values
 '*******************************************************************************
 Private Sub SetSortPivot(ByRef sPivot As SORT_PIVOT _
-                       , ByVal index As Long _
-                       , ByVal v As Variant)
-    sPivot.index = index
-    If IsObject(v) Then Set sPivot.value_ = v Else sPivot.value_ = v
+                       , ByVal Index As Long _
+                       , ByRef v As Variant)
+    sPivot.Index = Index
+    If IsObject(v) Then Set sPivot.Value = v Else sPivot.Value = v
 End Sub
 
 '*******************************************************************************
@@ -2865,16 +2866,16 @@ Private Sub QuickSort2DArray(ByRef arr As Variant _
     Do While newLowRow <= newUppRow
         'Increase 'newLowRow' until a swap is needed
         Do While newLowRow < upperRow
-            cr = CompareValues(arr(newLowRow, sortColumn), piv.value_, cOptions)
+            cr = CompareValues(arr(newLowRow, sortColumn), piv.Value, cOptions)
             If cr.mustSwap Then Exit Do
-            If cr.areEqual Then If arrIndex(newLowRow) >= piv.index Then Exit Do
+            If cr.areEqual Then If arrIndex(newLowRow) >= piv.Index Then Exit Do
             newLowRow = newLowRow + 1
         Loop
         'Decrease 'newUppRow' until a swap is needed
         Do While newUppRow > lowerRow
-            cr = CompareValues(piv.value_, arr(newUppRow, sortColumn), cOptions)
+            cr = CompareValues(piv.Value, arr(newUppRow, sortColumn), cOptions)
             If cr.mustSwap Then Exit Do
-            If cr.areEqual Then If piv.index >= arrIndex(newUppRow) Then Exit Do
+            If cr.areEqual Then If piv.Index >= arrIndex(newUppRow) Then Exit Do
             newUppRow = newUppRow - 1
         Loop
         'Swap rows, if needed
