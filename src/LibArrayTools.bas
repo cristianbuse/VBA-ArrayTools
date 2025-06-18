@@ -185,7 +185,15 @@ Public Enum CONDITION_OPERATOR
     [_opMax] = opNotLike
 End Enum
 
-'Struct used for filtering (see FILTER_PAIR struct)
+Public Enum CONDITION_OPERATOR_TYPE
+    [_opTypeNone] = 0
+    opTypeEquality = 1   '=, <>
+    opTypeComparison = 2 '<, >, <=, >=
+    opTypeInclusion = 3  'IN, NOT IN
+    opTypePattern = 4    'LIKE, NOT LIKE
+End Enum
+
+'Structs used for filtering (see FILTER_PAIR struct)
 Private Type COMPARE_VALUE
     Value As Variant
     Rank As DATA_TYPE_RANK
@@ -205,6 +213,7 @@ End Type
 '*******************************************************************************
 Public Type FILTER_PAIR
     cOperator As CONDITION_OPERATOR
+    cOpType As CONDITION_OPERATOR_TYPE
     compValue As COMPARE_VALUE
 End Type
 
@@ -270,10 +279,9 @@ End Type
 '   - Collection(1,2,Collection(3,4)) returns [1,2,[3,4]]
 '*******************************************************************************
 Public Function Collection(ParamArray values() As Variant) As Collection
+    Dim coll As New Collection
     Dim v As Variant
-    Dim coll As Collection
     '
-    Set coll = New Collection
     For Each v In values
         coll.Add v
     Next v
@@ -397,19 +405,42 @@ End Function
 '*******************************************************************************
 Public Function CreateFilter(ByVal cOperator As CONDITION_OPERATOR _
                            , ByRef compareValue As Variant) As FILTER_PAIR
+    Static tMap([_opMin] To [_opMax]) As CONDITION_OPERATOR_TYPE
+    '
+    If tMap([_opMin]) = [_opTypeNone] Then
+        tMap(opEqual) = opTypeEquality
+        tMap(opNotEqual) = opTypeEquality
+        tMap(opSmaller) = opTypeComparison
+        tMap(opBigger) = opTypeComparison
+        tMap(opSmallerOrEqual) = opTypeComparison
+        tMap(opBiggerOrEqual) = opTypeComparison
+        tMap(opIn) = opTypeInclusion
+        tMap(opNotIn) = opTypeInclusion
+        tMap(opLike) = opTypePattern
+        tMap(opNotLike) = opTypePattern
+    End If
     If cOperator >= [_opMin] And cOperator <= [_opMax] Then
         CreateFilter.cOperator = cOperator
+        CreateFilter.cOpType = tMap(cOperator)
     End If
     With CreateFilter.compValue
         .Rank = GetDataTypeRank(compareValue)
         If .Rank = rankArray Or .Rank = rankObject Then
             .IsIterable = IsIterable(compareValue)
-            If .IsIterable Then Set .Keys = CreateTextKeys(compareValue)
+            If .IsIterable And CreateFilter.cOpType = opTypeInclusion Then
+                Set .Keys = CreateTextKeys(compareValue)
+            End If
+        End If
+        If Not .IsIterable And CreateFilter.cOpType = opTypeInclusion Then
+            If cOperator = opIn Then CreateFilter.cOperator = opEqual _
+                                Else CreateFilter.cOperator = opNotEqual
+            CreateFilter.cOpType = opTypeEquality
         End If
         If .Rank = rankObject Then
             Set .Value = compareValue
         Else
             .Value = compareValue
+            If .Rank = vbEmpty Then .Rank = rankText
         End If
     End With
 End Function
@@ -1349,17 +1380,15 @@ End Function
 'Compatible types: Arrays, Collections, Custom Collections, Dictionaries etc.
 'Does not raise errors
 '*******************************************************************************
-Public Function IsIterable(ByRef list_ As Variant) As Boolean
+Public Function IsIterable(ByRef vList As Variant) As Boolean
     Dim v As Variant
     '
-    'Custom collections classes that use Attribute NewEnum.VB_UserMemID = -4 (to
-    '   get a default enumerator to be used with For Each... constructions) are
-    '   causing automation errors and crashes on x64
-    'Avoid bug by using a 'Set' statement or by using a call to another method
-    Set v = Nothing
+    #If (Mac = 0) And Win64 Then
+        Set v = Nothing 'Avoid stack issues with VB_UserMemID = -4 (For Each..)
+    #End If
     '
     On Error Resume Next
-    For Each v In list_
+    For Each v In vList
         Exit For
     Next v
     IsIterable = (Err.Number = 0)
@@ -1389,9 +1418,6 @@ Public Function IsValuePassingFilter(ByRef Value As Variant _
                                    , ByRef filter As FILTER_PAIR) As Boolean
     Const fullMethodName As String = MODULE_NAME & ".IsValuePassingFilter"
     Dim rnk As DATA_TYPE_RANK: rnk = GetDataTypeRank(Value)
-    Dim isListOperator As Boolean
-    '
-    isListOperator = (filter.cOperator = opIn) Or (filter.cOperator = opNotIn)
     '
     'Validate input
     If filter.cOperator < [_opMin] Or filter.cOperator > [_opMax] Then
@@ -1404,7 +1430,7 @@ Public Function IsValuePassingFilter(ByRef Value As Variant _
         Exit Function
     ElseIf filter.compValue.Rank = rankArray Then
         If filter.compValue.IsIterable Then
-            If Not isListOperator Then
+            If filter.cOpType <> opTypeInclusion Then
                 Err.Raise 5, fullMethodName, "Incompatible filter"
             End If
         Else
@@ -1414,25 +1440,15 @@ Public Function IsValuePassingFilter(ByRef Value As Variant _
     '
     'Treat Empty as Null String by adjusting ranks
     If rnk = rankEmpty Then rnk = rankText
-    If filter.compValue.Rank = rankEmpty Then filter.compValue.Rank = rankText
     '
-    'Check for list inclusion
-    If isListOperator And filter.compValue.IsIterable Then
+    'Check target value against filter
+    If filter.cOpType = opTypeInclusion Then
         Dim isIncluded As Boolean
         Dim textKey As String: textKey = GetUniqueTextKey(Value)
         '
         isIncluded = CollectionHasKey(filter.compValue.Keys, textKey)
         IsValuePassingFilter = isIncluded Xor (filter.cOperator = opNotIn)
-        Exit Function
-    Else
-        'Adjust inclusion operators because compare value is not iterable
-        If filter.cOperator = opIn Then filter.cOperator = opEqual
-        If filter.cOperator = opNotIn Then filter.cOperator = opNotEqual
-    End If
-    '
-    'Check target value against filter
-    Select Case filter.cOperator
-    Case opSmaller, opBigger, opSmallerOrEqual, opBiggerOrEqual
+    ElseIf filter.cOpType = opTypeComparison Then
         If rnk <> filter.compValue.Rank Then Exit Function
         If rnk < rankBoolean Then Exit Function
         '
@@ -1453,14 +1469,14 @@ Public Function IsValuePassingFilter(ByRef Value As Variant _
             areDifferent = (Value <> filter.compValue.Value)
             IsValuePassingFilter = IsValuePassingFilter Xor areDifferent
         End If
-    Case opLike, opNotLike
+    ElseIf filter.cOpType = opTypePattern Then
         If filter.compValue.Rank <> rankText Then Exit Function 'Text Pattern
         If rnk < rankBoolean Then Exit Function
         '
         'The 'Like' operator uses Option Compare Text (see top of the module)
         Dim isLike As Boolean: isLike = (Value Like filter.compValue.Value)
         IsValuePassingFilter = isLike Xor (filter.cOperator = opNotLike)
-    Case opEqual, opNotEqual
+    ElseIf filter.cOpType = opTypeEquality Then
         If rnk <> filter.compValue.Rank Then
             If filter.cOperator = opEqual Then Exit Function
             IsValuePassingFilter = Not filter.compValue.IsIterable
@@ -1480,9 +1496,9 @@ Public Function IsValuePassingFilter(ByRef Value As Variant _
         End If
         '
         IsValuePassingFilter = areEqual Xor (filter.cOperator = opNotEqual)
-    Case Else
-        Err.Raise 5, fullMethodName, "Invalid Operator"
-    End Select
+    Else 'Can only happen if new operators were added to the Enum
+        Err.Raise 5, fullMethodName, "Unhandled Operator"
+    End If
 End Function
 
 '*******************************************************************************
