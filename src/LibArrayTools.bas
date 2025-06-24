@@ -1242,7 +1242,8 @@ Public Function InsertRowsAtValChange(ByRef arr As Variant _
                                     , ByVal rowsCount As Long _
                                     , ByVal columnIndex As Long _
                                     , Optional ByVal topRowsCount As Long = 0 _
-                                    , Optional ByVal bottomRowsCount As Long = 0) As Variant
+                                    , Optional ByVal bottomRowsCount As Long = 0 _
+                                    , Optional ByVal ignoreEmpty As Boolean = False) As Variant
     Const fullMethodName As String = MODULE_NAME & ".InsertRowsAtValChange"
     '
     'Check Input
@@ -1269,13 +1270,22 @@ Public Function InsertRowsAtValChange(ByRef arr As Variant _
     Dim currentKey As String
     Dim previousKey As String
     Dim rowsToInsert As Long
+    Const nullStringKey As String = "_4"
     '
     'Store new row indexes
     previousKey = GetUniqueTextKey(arr(lowRow, columnIndex))
     n = lowRow + topRowsCount
     For i = lowRow To uppRow
         currentKey = GetUniqueTextKey(arr(i, columnIndex))
-        If currentKey <> previousKey Then n = n + rowsCount
+        If currentKey <> previousKey Then
+            If ignoreEmpty Then
+                If Not IsEmpty(arr(i, columnIndex)) Then
+                    If currentKey <> nullStringKey Then n = n + rowsCount
+                End If
+            Else
+                n = n + rowsCount
+            End If
+        End If
         arrNewRows(i) = n
         '
         n = n + 1

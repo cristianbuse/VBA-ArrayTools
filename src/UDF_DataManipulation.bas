@@ -140,7 +140,7 @@ Public Function DM_ARRAY(ByVal columnsCount As Long _
         Dim remainders As Long: remainders = coll.Count Mod columnsCount
         '
         If remainders > 0 Then
-            Dim errNA As Variant: errNA = VBA.CVErr(xlErrNA)
+            Dim errNA As Variant: errNA = CVErr(xlErrNA)
             Dim i As Long
             '
             For i = 1 To columnsCount - remainders
@@ -155,7 +155,7 @@ Public Function DM_ARRAY(ByVal columnsCount As Long _
     LibArrayTools.ReplaceEmptyInArray DM_ARRAY, vbNullString
 Exit Function
 FailInput:
-    DM_ARRAY = VBA.CVErr(xlErrValue)
+    DM_ARRAY = CVErr(xlErrValue)
 End Function
 
 '###############################################################################
@@ -217,13 +217,13 @@ Attribute DM_FILTER.VB_ProcData.VB_Invoke_Func = " \n14"
     '
     'Only accept 1-Area Ranges. This could alternatively be changed to ignore
     '   the extra Areas by arr = arr.Areas(1).Value2 instead of the 2 lines
-    If VBA.TypeName(arr) = "Range" Then
+    If TypeName(arr) = "Range" Then
         If arr.Areas.Count > 1 Then GoTo FailInput
         arr = arr.Value2
     End If
     '
     'Convert single value to 1-element 1D array
-    If Not VBA.IsArray(arr) Then arr = Array(arr)
+    If Not IsArray(arr) Then arr = Array(arr)
     '
     Select Case LibArrayTools.GetArrayDimsCount(arr)
     Case 2
@@ -241,7 +241,7 @@ Attribute DM_FILTER.VB_ProcData.VB_Invoke_Func = " \n14"
         , LibArrayTools.CreateFiltersArray(filters))
     '
     If LibArrayTools.GetArrayElemCount(DM_FILTER) = 0 Then
-        DM_FILTER = VBA.CVErr(xlErrCalc)
+        DM_FILTER = CVErr(xlErrCalc)
     Else
         'Replace the special value Empty with empty String so it is not
         '   returned as 0 (zero) in the caller Range
@@ -250,7 +250,7 @@ Attribute DM_FILTER.VB_ProcData.VB_Invoke_Func = " \n14"
 Exit Function
 ErrorHandler:
 FailInput:
-    DM_FILTER = VBA.CVErr(xlErrValue)
+    DM_FILTER = CVErr(xlErrValue)
 End Function
 
 '###############################################################################
@@ -301,13 +301,13 @@ Public Function DM_INSERT(ByRef arr As Variant, ByVal rowsCount As Long _
     '
     'Only accept 1-Area Ranges. This could alternatively be changed to ignore
     '   the extra Areas by arr = arr.Areas(1).Value2 instead of the 2 lines
-    If VBA.TypeName(arr) = "Range" Then
+    If TypeName(arr) = "Range" Then
         If arr.Areas.Count > 1 Then GoTo FailInput
         arr = arr.Value2
     End If
     '
     'Convert single value to 1-element 1D array
-    If Not VBA.IsArray(arr) Then arr = Array(arr)
+    If Not IsArray(arr) Then arr = Array(arr)
     '
     Select Case LibArrayTools.GetArrayDimsCount(arr)
     Case 2
@@ -328,7 +328,7 @@ Public Function DM_INSERT(ByRef arr As Variant, ByVal rowsCount As Long _
 Exit Function
 ErrorHandler:
 FailInput:
-    DM_INSERT = VBA.CVErr(xlErrValue)
+    DM_INSERT = CVErr(xlErrValue)
 End Function
 
 '###############################################################################
@@ -371,12 +371,11 @@ End Sub
 '   - 1D arrays are converted to 1-row 2D arrays
 '*******************************************************************************
 Public Function DM_INSERT2(ByRef arr As Variant _
-    , ByVal rowsCount As Long, ByVal columnIndex As Long _
-    , Optional ByVal topRowsCount As Long = 0 _
-    , Optional ByVal bottomRowsCount As Long = 0 _
-) As Variant
-Attribute DM_INSERT2.VB_Description = "Inserts rows in a 2D Array between rows with different values (on the specified column) and optionally at the top and/or bottom of the array"
-Attribute DM_INSERT2.VB_ProcData.VB_Invoke_Func = " \n14"
+                         , ByVal rowsCount As Long _
+                         , ByVal columnIndex As Long _
+                         , Optional ByVal topRowsCount As Long = 0 _
+                         , Optional ByVal bottomRowsCount As Long = 0 _
+                         , Optional ByVal ignoreEmpty As Boolean = False) As Variant
     Application.Volatile False
     #If USE_LIB_FAST_UDFS Then
         LibUDFs.TriggerFastUDFCalculation
@@ -384,13 +383,13 @@ Attribute DM_INSERT2.VB_ProcData.VB_Invoke_Func = " \n14"
     '
     'Only accept 1-Area Ranges. This could alternatively be changed to ignore
     '   the extra Areas by arr = arr.Areas(1).Value2 instead of the 2 lines
-    If VBA.TypeName(arr) = "Range" Then
+    If TypeName(arr) = "Range" Then
         If arr.Areas.Count > 1 Then GoTo FailInput
         arr = arr.Value2
     End If
     '
     'Convert single value to 1-element 1D array
-    If Not VBA.IsArray(arr) Then arr = Array(arr)
+    If Not IsArray(arr) Then arr = Array(arr)
     '
     Select Case LibArrayTools.GetArrayDimsCount(arr)
     Case 2 'Continue
@@ -403,7 +402,7 @@ Attribute DM_INSERT2.VB_ProcData.VB_Invoke_Func = " \n14"
     End Select
     On Error GoTo ErrorHandler
     DM_INSERT2 = LibArrayTools.InsertRowsAtValChange( _
-        arr, rowsCount, columnIndex, topRowsCount, bottomRowsCount)
+        arr, rowsCount, columnIndex, topRowsCount, bottomRowsCount, ignoreEmpty)
     '
     'Replace the special value Empty with empty String so it is not returned
     '   as 0 (zero) in the caller Range
@@ -411,7 +410,7 @@ Attribute DM_INSERT2.VB_ProcData.VB_Invoke_Func = " \n14"
 Exit Function
 ErrorHandler:
 FailInput:
-    DM_INSERT2 = VBA.CVErr(xlErrValue)
+    DM_INSERT2 = CVErr(xlErrValue)
 End Function
 
 '###############################################################################
@@ -474,18 +473,18 @@ Attribute DM_MERGE.VB_ProcData.VB_Invoke_Func = " \n14"
     '
     'Only accept 1-Area Ranges. This could alternatively be changed to ignore
     '   the extra Areas by arr = arr.Areas(1).Value2 instead of the 2 lines
-    If VBA.TypeName(arr1) = "Range" Then
+    If TypeName(arr1) = "Range" Then
         If arr1.Areas.Count > 1 Then GoTo FailInput
         arr1 = arr1.Value2
     End If
-    If VBA.TypeName(arr2) = "Range" Then
+    If TypeName(arr2) = "Range" Then
         If arr2.Areas.Count > 1 Then GoTo FailInput
         arr2 = arr2.Value2
     End If
     '
     'Convert single value to 1-element 1D array
-    If Not VBA.IsArray(arr1) Then arr1 = Array(arr1)
-    If Not VBA.IsArray(arr2) Then arr2 = Array(arr2)
+    If Not IsArray(arr1) Then arr1 = Array(arr1)
+    If Not IsArray(arr2) Then arr2 = Array(arr2)
     '
     Dim columnsCount As Long
     '
@@ -508,7 +507,7 @@ Attribute DM_MERGE.VB_ProcData.VB_Invoke_Func = " \n14"
 Exit Function
 ErrorHandler:
 FailInput:
-    DM_MERGE = VBA.CVErr(xlErrValue)
+    DM_MERGE = CVErr(xlErrValue)
 End Function
 
 '###############################################################################
@@ -572,13 +571,13 @@ Attribute DM_REVERSE.VB_ProcData.VB_Invoke_Func = " \n14"
     '
     'Only accept 1-Area Ranges. This could alternatively be changed to ignore
     '   the extra Areas by arr = arr.Areas(1).Value2 instead of the 2 lines
-    If VBA.TypeName(arr) = "Range" Then
+    If TypeName(arr) = "Range" Then
         If arr.Areas.Count > 1 Then GoTo FailInput
         arr = arr.Value2
     End If
     '
     'Convert single value to 1-element 1D array
-    If Not VBA.IsArray(arr) Then arr = Array(arr)
+    If Not IsArray(arr) Then arr = Array(arr)
     '
     On Error GoTo ErrorHandler
     Select Case LibArrayTools.GetArrayDimsCount(arr)
@@ -598,7 +597,7 @@ Attribute DM_REVERSE.VB_ProcData.VB_Invoke_Func = " \n14"
 Exit Function
 ErrorHandler:
 FailInput:
-    DM_REVERSE = VBA.CVErr(xlErrValue)
+    DM_REVERSE = CVErr(xlErrValue)
 End Function
 
 '###############################################################################
@@ -655,7 +654,7 @@ Attribute DM_SEQUENCE.VB_ProcData.VB_Invoke_Func = " \n14"
         , commonDifference, columnsCount)
 Exit Function
 ErrorHandler:
-    DM_SEQUENCE = VBA.CVErr(xlErrValue)
+    DM_SEQUENCE = CVErr(xlErrValue)
 End Function
 
 '###############################################################################
@@ -716,13 +715,13 @@ Attribute DM_SLICE.VB_ProcData.VB_Invoke_Func = " \n14"
     '
     'Only accept 1-Area Ranges. This could alternatively be changed to ignore
     '   the extra Areas by arr = arr.Areas(1).Value2 instead of the 2 lines
-    If VBA.TypeName(arr) = "Range" Then
+    If TypeName(arr) = "Range" Then
         If arr.Areas.Count > 1 Then GoTo FailInput
         arr = arr.Value2
     End If
     '
     'Convert single value to 1-element 1D array
-    If Not VBA.IsArray(arr) Then
+    If Not IsArray(arr) Then
         arr = Array(arr)
         startColumn = startColumn + LBound(arr) - 1
     End If
@@ -747,10 +746,10 @@ Attribute DM_SLICE.VB_ProcData.VB_Invoke_Func = " \n14"
     LibArrayTools.ReplaceEmptyInArray DM_SLICE, vbNullString
 Exit Function
 FailInput:
-    DM_SLICE = VBA.CVErr(xlErrValue)
+    DM_SLICE = CVErr(xlErrValue)
 Exit Function
 FailReference:
-    DM_SLICE = VBA.CVErr(xlErrRef)
+    DM_SLICE = CVErr(xlErrRef)
 End Function
 
 '###############################################################################
@@ -832,13 +831,13 @@ Attribute DM_SORT.VB_ProcData.VB_Invoke_Func = " \n14"
     '
     'Only accept 1-Area Ranges. This could alternatively be changed to ignore
     '   the extra Areas by arr = arr.Areas(1).Value2 instead of the 2 lines
-    If VBA.TypeName(arr) = "Range" Then
+    If TypeName(arr) = "Range" Then
         If arr.Areas.Count > 1 Then GoTo FailInput
         arr = arr.Value2
     End If
     '
     'Convert single value to 1-element 1D array
-    If Not VBA.IsArray(arr) Then
+    If Not IsArray(arr) Then
         arr = Array(arr)
         sortIndex = sortIndex + LBound(arr) - 1
     End If
@@ -874,7 +873,7 @@ Attribute DM_SORT.VB_ProcData.VB_Invoke_Func = " \n14"
 Exit Function
 ErrorHandler:
 FailInput:
-    DM_SORT = VBA.CVErr(xlErrValue)
+    DM_SORT = CVErr(xlErrValue)
 End Function
 
 '###############################################################################
@@ -948,13 +947,13 @@ Attribute DM_UNIQUE.VB_ProcData.VB_Invoke_Func = " \n14"
     '
     'Only accept 1-Area Ranges. This could alternatively be changed to ignore
     '   the extra Areas by arr = arr.Areas(1).Value2 instead of the 2 lines
-    If VBA.TypeName(arr) = "Range" Then
+    If TypeName(arr) = "Range" Then
         If arr.Areas.Count > 1 Then GoTo FailInput
         arr = arr.Value2
     End If
     '
     'Convert single value to 1-element 1D array with lower bound set to 1
-    If Not VBA.IsArray(arr) Then
+    If Not IsArray(arr) Then
         Dim tempArr(1 To 1) As Variant
         tempArr(1) = arr
         arr = tempArr
@@ -980,7 +979,7 @@ Attribute DM_UNIQUE.VB_ProcData.VB_Invoke_Func = " \n14"
     Dim uniqueIndexes() As Long
     '
     'Check if all indexes are used
-    If VBA.IsNumeric(indexes) Then useAllIndexes = (indexes = 0)
+    If IsNumeric(indexes) Then useAllIndexes = (indexes = 0)
     '
     'Create array of integer indexes
     On Error GoTo ErrorHandler
@@ -1011,7 +1010,7 @@ Attribute DM_UNIQUE.VB_ProcData.VB_Invoke_Func = " \n14"
 Exit Function
 ErrorHandler:
 FailInput:
-    DM_UNIQUE = VBA.CVErr(xlErrValue)
+    DM_UNIQUE = CVErr(xlErrValue)
 End Function
 
 '###############################################################################
