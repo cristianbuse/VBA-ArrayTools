@@ -770,6 +770,8 @@ End Function
 '                        Default is 0 (all characters)
 '   - [caseSensitive]: * True - compare texts as case-sensitive
 '                      * False - ignore case when comparing texts (default)
+'   - [startRow]:        the row to start search from.
+'                        Default is 0, or first row index (if less than)
 'Notes:
 '   - consider limiting 'maxCharsToMatch' to 255 when searching for Excel list
 '     object headers or formulas as these are limited to 255 characters
@@ -784,7 +786,8 @@ Public Function FindTextsRow(ByRef arr() As Variant _
                            , ByRef iterableTexts As Variant _
                            , Optional ByVal maxRowsToSearch As Long = 0 _
                            , Optional ByVal maxCharsToMatch As Long = 0 _
-                           , Optional ByVal caseSensitive As Boolean = False) As Long
+                           , Optional ByVal caseSensitive As Boolean = False _
+                           , Optional ByVal startRow As Long = 0) As Long
     Const fullMethodName As String = MODULE_NAME & ".FindTextsRow"
     '
     If GetArrayDimsCount(arr) <> 2 Then
@@ -792,6 +795,7 @@ Public Function FindTextsRow(ByRef arr() As Variant _
     ElseIf maxRowsToSearch <= 0 Then 'Search all rows
         maxRowsToSearch = UBound(arr, 1) - LBound(arr, 1) + 1
     End If
+    If startRow < LBound(arr, 1) Then startRow = LBound(arr, 1)
     '
     Dim h As Variant
     Dim s As String
@@ -825,7 +829,7 @@ Public Function FindTextsRow(ByRef arr() As Variant _
     Dim lenS As Long
     '
     If caseSensitive Then cMethod = vbBinaryCompare Else cMethod = vbTextCompare
-    For i = LBound(arr, 1) To UBound(arr, 1)
+    For i = startRow To UBound(arr, 1)
         isRowFound = True
         '
         For Each h In collTexts
